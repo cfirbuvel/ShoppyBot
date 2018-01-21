@@ -1,3 +1,4 @@
-# Shoppybot's README
-# My project's README
-# My project's README
+# Install
+pip -r install requierments.txt
+
+intall redis https://redis.io/download

@@ -1,31 +1,39 @@
 # helper classes for shoppybot
-
 import sqlite3
 import configparser
-import time
+import redis
+import json
+
+
+class JsonRedis(redis.StrictRedis):
+
+    def json_get(self, name):
+        value = self.get(name)
+        if value:
+            value = json.loads(value.decode("utf-8"))
+        return value
+
+    def json_set(self, name, value):
+        value = json.dumps(value)
+        return self.set(name, value)
 
 
 class ConfigHelper:
     def __init__(self, cfgfilename='shoppybot.conf'):
-        self.config = configparser.ConfigParser(defaults={
-            'api_token': None,
-            'reviews_channel': None,
-            'service_channel': None,
-            'customers_channel': None,
-            'vip_customers_channel': None,
-            'couriers_channel': None,
-            'welcome_text': 'Welcome text not configured yet',
-            'order_text': 'Order text not configured yet',
-            'order_complete_text': 'Order text not configured yet',
-            'working_hours': 'Working hours not configured yet',
-            'contact_info': 'Contact info not configured yet',
-            'phone_number_required': True,
-            'identification_required': True,
-            'identification_stage2_required': False,
-            'identification_stage2_question': None,
-            'only_for_customers': False,
-            'delivery_fee': 0,
-        })
+        self.config = configparser.ConfigParser(
+            defaults={'api_token': None, 'reviews_channel': None,
+                      'service_channel': None, 'customers_channel': None,
+                      'vip_customers_channel': None, 'couriers_channel': None,
+                      'welcome_text': 'Welcome text not configured yet',
+                      'order_text': 'Order text not configured yet',
+                      'order_complete_text': 'Order text not configured yet',
+                      'working_hours': 'Working hours not configured yet',
+                      'contact_info': 'Contact info not configured yet',
+                      'phone_number_required': True,
+                      'identification_required': True,
+                      'identification_stage2_required': False,
+                      'identification_stage2_question': None,
+                      'only_for_customers': False, 'delivery_fee': 0, })
         self.config.read(cfgfilename, encoding='utf-8')
         self.section = 'Settings'
 
@@ -82,7 +90,8 @@ class ConfigHelper:
         return value
 
     def get_identification_stage2_required(self):
-        value = self.config.getboolean(self.section, 'identification_stage2_required')
+        value = self.config.getboolean(self.section,
+                                       'identification_stage2_required')
         return value
 
     def get_identification_stage2_question(self):
@@ -132,7 +141,8 @@ class DBHelper:
             raise RuntimeError('Unknown product id')
 
     def get_product_prices(self, id):
-        sql = 'SELECT count,price FROM product_prices WHERE id = {} ORDER BY count'.format(id)
+        sql = 'SELECT count,price FROM product_prices WHERE id = {} ORDER BY ' \
+              'count'.format(id)
         return [x for x in self.conn.execute(sql)]
 
     def get_pickup_locations(self):
@@ -160,18 +170,21 @@ class DBHelper:
             raise RuntimeError('Unknown courier id')
 
     def get_couriers_for_location(self, location_id):
-        sql = 'SELECT nickname FROM couriers WHERE location = {}'.format(location_id)
+        sql = 'SELECT nickname FROM couriers WHERE location = {}'.format(
+            location_id)
         return [x for x in self.conn.execute(sql)]
 
     def get_couriers_for_location_name(self, location_name):
         location_id = None
-        value = self.conn.execute('SELECT id FROM locations WHERE name=?', (location_name,)).fetchone()
+        value = self.conn.execute('SELECT id FROM locations WHERE name=?',
+                                  (location_name,)).fetchone()
         if value:
             location_id = value[0]
         else:
             raise RuntimeError('Unknown location name')
 
-        sql = 'SELECT nickname FROM couriers WHERE location = {}'.format(location_id)
+        sql = 'SELECT nickname FROM couriers WHERE location = {}'.format(
+            location_id)
         return [x[0] for x in self.conn.execute(sql)]
 
     def delete_courier(self, courier_id):
@@ -180,7 +193,7 @@ class DBHelper:
 
     def add_new_product(self, title, prices, image_data):
         sql = 'SELECT MAX(id) FROM products'
-        
+
         max_id = self.conn.execute(sql).fetchone()[0]
         if max_id:
             max_id = max_id
@@ -188,12 +201,17 @@ class DBHelper:
             max_id = 0
 
         new_product_id = max_id + 1
-        self.conn.execute('INSERT INTO products(id, title) VALUES (?, ?)', (new_product_id, title))
+        self.conn.execute('INSERT INTO products(id, title) VALUES (?, ?)',
+                          (new_product_id, title))
 
         for count, price in prices:
-            self.conn.execute('INSERT INTO product_prices(id, count, price) VALUES (?, ?, ?)', (new_product_id, count, price))
+            self.conn.execute(
+                'INSERT INTO product_prices(id, count, price) VALUES (?, ?, ?)',
+                (new_product_id, count, price))
 
-        self.conn.execute('INSERT INTO product_images(id, image_data) VALUES (?, ?)', (new_product_id, image_data))
+        self.conn.execute(
+            'INSERT INTO product_images(id, image_data) VALUES (?, ?)',
+            (new_product_id, image_data))
         self.conn.commit()
 
     def delete_product(self, product_id):
@@ -203,7 +221,9 @@ class DBHelper:
         self.conn.commit()
 
     def add_new_courier(self, name, location_id):
-        self.conn.execute('INSERT INTO couriers(nickname, location) VALUES (?, ?)', (name, location_id))
+        self.conn.execute(
+            'INSERT INTO couriers(nickname, location) VALUES (?, ?)',
+            (name, location_id))
         self.conn.commit()
 
 
@@ -221,7 +241,7 @@ class CartHelper:
 
     def add(self, user_data, product_id):
         cart = self.check_cart(user_data)
-
+        product_id = str(product_id)
         prices = self.db.get_product_prices(product_id)
         counts = [x[0] for x in prices]
         min_count = counts[0]
@@ -237,8 +257,11 @@ class CartHelper:
             next_count_index = (current_count_index + 1) % len(counts)
             cart[product_id] = counts[next_count_index]
 
+        return user_data
+
     def remove(self, user_data, product_id):
         cart = self.check_cart(user_data)
+        product_id = str(product_id)
 
         prices = self.db.get_product_prices(product_id)
         counts = [x[0] for x in prices]
@@ -255,6 +278,8 @@ class CartHelper:
                 next_count_index = current_count_index - 1
                 cart[product_id] = counts[next_count_index]
 
+        return user_data
+
     def get_product_ids(self, user_data):
         cart = self.check_cart(user_data)
 
@@ -262,6 +287,7 @@ class CartHelper:
 
     def get_product_count(self, user_data, product_id):
         cart = self.check_cart(user_data)
+        product_id = str(product_id)
 
         if product_id not in cart:
             return 0
@@ -275,6 +301,7 @@ class CartHelper:
 
     def get_product_subtotal(self, user_data, product_id):
         cart = self.check_cart(user_data)
+        product_id = str(product_id)
 
         count = 0
         if product_id in cart:
@@ -297,32 +324,45 @@ class CartHelper:
             total += subtotal
         return total
 
-# Unused in the prototype
-class Session:
-    def __init__(self):
-        self.created_time = time.time()
-        self.data = {}
 
-    def outdated(self):
-        current_time = time.time()
+session_client = JsonRedis(host='localhost', port=6379, db=0)
 
-        if (current_time - self.created_time) > 86400000:
-            return True
-        else:
-            return False
 
-class SessionHelper:
-    def __init__(self):
-        self.sessions = {}
+def get_user_session(user_id):
+    user_session = session_client.json_get(user_id)
+    updated = False
 
-    def get_session(self, session_id):
-        self.cleanup()
-        if session_id not in self.sessions:
-            self.sessions[session_id] = Session()
-        return self.sessions[session_id]
+    if not user_session:
+        session_client.json_set(user_id, user_id)
+        user_session = session_client.json_get(user_id)
 
-    def cleanup(self):
-        for session_id in list(self.sessions):
-            session = self.sessions[session_id]
-            if session.outdated():
-                del self.sessions[session_id]
+    if not user_session.get('cart'):
+        user_session["cart"] = {}
+        updated = True
+
+    if not user_session.get('shipping'):
+        user_session["shipping"] = {}
+        updated = True
+
+    if updated:
+        session_client.json_set(user_id, user_session)
+
+    return user_session
+
+
+def get_username(update):
+    if update.callback_query is not None:
+        username = update.callback_query.from_user.username
+    else:
+        username = update.message.from_user.username
+
+    return username
+
+
+def get_user_id(update):
+    if update.callback_query is not None:
+        user_id = update.callback_query.from_user.id
+    else:
+        user_id = update.message.from_user.id
+
+    return user_id
