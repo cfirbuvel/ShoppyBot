@@ -333,7 +333,7 @@ def get_user_session(user_id):
     updated = False
 
     if not user_session:
-        session_client.json_set(user_id, user_id)
+        session_client.json_set(user_id, {})
         user_session = session_client.json_get(user_id)
 
     if not user_session.get('cart'):

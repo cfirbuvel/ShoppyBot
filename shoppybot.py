@@ -28,7 +28,7 @@ _ = gettext.gettext
 # global variable for on/off
 #
 BOT_ON = True
-DEBUG = False
+DEBUG = True
 
 db = DBHelper()
 # TODO make a DEBUG option in config
