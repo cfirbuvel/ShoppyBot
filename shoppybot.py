@@ -6,6 +6,8 @@ from telegram.ext import CallbackQueryHandler, CommandHandler,\
 
 from src.admin import *
 from src.enums import *
+from src.messages import create_confirmation_text, create_product_description, \
+    create_service_notice
 from src.helpers import CartHelper, session_client, get_user_session, \
     get_user_id, get_username
 from src.keyboards import create_drop_responsibility_keyboard, \
@@ -13,7 +15,8 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_pickup_location_keyboard, create_product_keyboard, \
     create_shipping_keyboard, create_cancel_keyboard, create_time_keyboard, \
     create_confirmation_keyboard, create_courier_confirmation_keyboard
-from models import create_tables, User, Courier, Order, OrderItem
+from src.models import create_tables, User, Courier, Order, OrderItem, \
+    Product, ProductCount
 
 logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
                     level=logging.INFO)
@@ -28,9 +31,8 @@ _ = gettext.gettext
 # global variable for on/off
 #
 BOT_ON = True
-DEBUG = False
+DEBUG = True
 
-db = DBHelper()
 # TODO make a DEBUG option in config
 if DEBUG:
     config = ConfigHelper(cfgfilename='test_conf.conf')
@@ -89,180 +91,6 @@ def create_photo_question():
     return random.choice([q1, q2, q3, q4])
 
 
-#
-# message templates
-#
-# TODO move all messages to a new file
-
-def create_product_description(product_id, user_data):
-    text = _('Product:\n{}').format(db.get_product_title(product_id))
-    text += '\n\n'
-    text += '〰️'
-    text += '\n'
-    text += _('<b>Delivery Fee: </b>') + str(config.get_delivery_fee()) + _('$')
-    text += '\n'
-    text += _('for orders blow 500$')
-    text += '\n'
-    text += '〰️'
-    text += '\n'
-    text += _('Price:')
-    text += '\n'
-
-    prices = db.get_product_prices(product_id)
-    for q, price in prices:
-        text += '\n'
-        text += _('x {} = ${}').format(q, int(price))
-
-    q = cart.get_product_count(user_data, product_id)
-    if q > 0:
-        subtotal = cart.get_product_subtotal(user_data, product_id)
-        text += '\n'
-        text += _('Count: <b>{}</b>').format(q)
-        text += '\n'
-        text += _('Subtotal: <b>${}</b>').format(int(subtotal))
-        text += '\n'
-
-    return text
-
-
-def create_confirmation_text(user_data):
-    is_pickup = False
-    if user_data['shipping']['method'] == BUTTON_TEXT_PICKUP:
-        is_pickup = True
-
-    text = _('<b>Please confirm your order:</b>')
-    text += '\n\n'
-    text += '〰〰〰〰〰〰〰〰〰〰〰〰️'
-    text += '\n'
-    text += _('Items in cart:')
-    text += '\n'
-
-    # prices = cart.get_product_ids(user_data)
-    for product_id in cart.get_product_ids(user_data):
-        text += '\n'
-        text += _('Product:\n{}').format(db.get_product_title(product_id))
-        text += '\n'
-        text += _('x {} = ${}').format(
-            cart.get_product_count(user_data, product_id),
-            cart.get_product_subtotal(user_data, product_id), )
-        text += '\n'
-    text += '〰〰〰〰〰〰〰〰〰〰〰〰️'
-
-    is_vip = False
-    shipping_data = user_data['shipping']
-    for key, value in shipping_data.items():
-        if key == 'vip':
-            is_vip = True
-
-    if cart.get_cart_total(user_data) < 500:
-        if is_pickup:
-            text += '\n\n'
-            text += _('Total: <b>${}</b>').format(
-                cart.get_cart_total(user_data))
-        else:
-            if is_vip:
-                text += '\n\n'
-                text += _('Total: <b>${}</b>').format(
-                    cart.get_cart_total(user_data))
-            else:
-                text += '\n\n'
-                text += _('<b>Delivery Fee: </b>') + str(
-                    config.get_delivery_fee()) + _('$')
-                text += '\n'
-                text += _('Total: <b>${}</b>').format((cart.get_cart_total(
-                    user_data)) + config.get_delivery_fee())
-    else:
-        text += '\n\n'
-        text += _('Total: <b>${}</b>').format(cart.get_cart_total(user_data))
-
-    return text
-
-
-def create_service_notice(user_data, order_id):
-    is_pickup = False
-    if user_data['shipping']['method'] == BUTTON_TEXT_PICKUP:
-        is_pickup = True
-
-    text = _('<b>Order №{} notice:</b>'.format(order_id))
-    text += '\n\n'
-    text += '〰〰〰〰〰〰〰〰〰〰〰〰️'
-    text += '\n'
-    text += _('Items in cart:')
-    text += '\n'
-
-    for product_id in cart.get_product_ids(user_data):
-        text += '\n'
-        text += _('Product:\n{}').format(db.get_product_title(product_id))
-        text += '\n'
-        text += _('x {} = ${}').format(
-            cart.get_product_count(user_data, product_id),
-            cart.get_product_subtotal(user_data, product_id), )
-        text += '\n'
-
-    is_vip = False
-    shipping_data = user_data['shipping']
-    for key, value in shipping_data.items():
-        if key == 'vip':
-            is_vip = True
-
-    if cart.get_cart_total(user_data) < 500:
-        if is_pickup:
-            text += '\n\n'
-            text += _('Total: <b>${}</b>').format(
-                cart.get_cart_total(user_data))
-        else:
-            if is_vip:
-                text += '\n\n'
-                text += _('Total: <b>${}</b>').format(
-                    cart.get_cart_total(user_data))
-            else:
-                text += '\n\n'
-                text += _('<b>Delivery Fee: </b>') + str(
-                    config.get_delivery_fee()) + _('$')
-                text += '\n'
-                text += _('Total: <b>${}</b>').format((cart.get_cart_total(
-                    user_data)) + config.get_delivery_fee())
-    else:
-        text += '\n\n'
-        text += _('Total: <b>${}</b>').format(cart.get_cart_total(user_data))
-    text += '\n'
-    text += '〰〰〰〰〰〰〰〰〰〰〰〰️'
-
-    text += '\n\n'
-    text += _('Shipping details:')
-    text += '\n'
-
-    shipping_data = user_data['shipping']
-    for key, value in shipping_data.items():
-        # if key != 'photo_id' and key != 'location' and key != 'stage2_id':
-        text += '\n'
-        if key == 'vip':
-            text += _('Vip Costumer')
-        if key == 'photo_question':
-            text += _('Photo question: ')
-            text += value
-        if key == 'method':
-            text += _('Pickup/Delivery: ')
-            text += value
-        if key == 'pickup_location':
-            text += _('Pickup location: ')
-            text += value
-        if key == 'address':
-            text += _('Address: ')
-            text += value
-        if key == 'time':
-            text += _('When: ')
-            text += value
-        if key == 'time_text':
-            text += _('Time: ')
-            text += value
-        if key == 'phone_number':
-            text += _('Phone number: ')
-            text += value
-
-    return text
-
-
 def resend_responsibility_keyboard(bot, update, user_data):
     query = update.callback_query
     data = query.data
@@ -270,13 +98,12 @@ def resend_responsibility_keyboard(bot, update, user_data):
     user_id = get_user_id(update)
     session = get_user_session(user_id)
     try:
-        order = Order.filter(id=order_id).get()
+        order = Order.get(id=order_id)
     except Order.DoesNotExist:
         logger.info('Order № {} not found!'.format(order_id))
     else:
         order.courier = None
         order.save()
-
     bot.delete_message(config.get_couriers_channel(),
                        message_id=query.message.message_id)
     bot.send_message(config.get_couriers_channel(),
@@ -294,7 +121,7 @@ def make_confirm(bot, update, user_data):
     bot.delete_message(config.get_service_channel(),
                        message_id=query.message.message_id)
     try:
-        order = Order.filter(id=order_id).get()
+        order = Order.get(id=order_id)
     except Order.DoesNotExist:
         logger.info('Order № {} not found!'.format(order_id))
     else:
@@ -316,7 +143,7 @@ def make_unconfirm(bot, update, user_data):
     bot.delete_message(config.get_service_channel(),
                        message_id=query.message.message_id)
     try:
-        order = Order.filter(id=order_id).get()
+        order = Order.get(id=order_id)
     except Order.DoesNotExist:
         logger.info('Order № {} not found!'.format(order_id))
     else:
@@ -383,23 +210,27 @@ def on_menu(bot, update, user_data=None):
                                       parse_mode=ParseMode.MARKDOWN, )
 
                 # send_products to current chat
-                for product in db.get_products():
-                    product_id, title = product
-
-                    images = db.get_product_images(product_id)
-
-                    if len(images) > 0:
-                        image_data = images[0]
-                        image_stream = io.BytesIO(image_data)
-                        bot.send_photo(query.message.chat_id,
-                                       photo=image_stream)
-                        bot.send_message(query.message.chat_id,
-                                         text=create_product_description(
-                                             product_id, user_data),
-                                         reply_markup=create_product_keyboard(
-                                             product_id, user_data, cart),
-                                         parse_mode=ParseMode.HTML,
-                                         timeout=20, )
+                for product in Product.select():
+                    product_count = cart.get_product_count(
+                        user_data, product.id)
+                    subtotal = cart.get_product_subtotal(
+                        user_data, product.id)
+                    delivery_fee = config.get_delivery_fee()
+                    product_title, prices = cart.product_full_info(
+                        user_data, product.id)
+                    image_data = product.image
+                    image_stream = io.BytesIO(image_data)
+                    bot.send_photo(query.message.chat_id,
+                                   photo=image_stream)
+                    bot.send_message(query.message.chat_id,
+                                     text=create_product_description(
+                                         product_title, prices,
+                                         product_count, subtotal,
+                                         delivery_fee),
+                                     reply_markup=create_product_keyboard(
+                                         product.id, user_data, cart),
+                                     parse_mode=ParseMode.HTML,
+                                     timeout=20, )
 
                 # send menu again as a new message
                 bot.send_message(query.message.chat_id,
@@ -444,10 +275,18 @@ def on_menu(bot, update, user_data=None):
                 user_data = cart.add(user_data, product_id)
                 session_client.json_set(user_id, user_data)
 
+                subtotal = cart.get_product_subtotal(user_data, product_id)
+                delivery_fee = config.get_delivery_fee()
+                product_title, prices = cart.product_full_info(
+                    user_data, product_id)
+                product_count = cart.get_product_count(user_data, product_id)
+
                 bot.edit_message_text(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
                                       text=create_product_description(
-                                          product_id, user_data),
+                                             product_title, prices,
+                                             product_count, subtotal,
+                                             delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
                                       parse_mode=ParseMode.HTML, )
@@ -456,10 +295,18 @@ def on_menu(bot, update, user_data=None):
                 user_data = cart.remove(user_data, product_id)
                 session_client.json_set(user_id, user_data)
 
+                subtotal = cart.get_product_subtotal(user_data, product_id)
+                delivery_fee = config.get_delivery_fee()
+                product_title, prices = cart.product_full_info(
+                    user_data, product_id)
+                product_count = cart.get_product_count(user_data, product_id)
+
                 bot.edit_message_text(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
                                       text=create_product_description(
-                                          product_id, user_data),
+                                             product_title, prices,
+                                             product_count, subtotal,
+                                             delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
                                       parse_mode=ParseMode.HTML, )
@@ -514,8 +361,8 @@ def enter_state_shipping_method(bot, update, user_data):
 
 
 def enter_state_courier_location(bot, update, user_data):
-    locations = db.get_pickup_locations()
-    location_names = [x[1] for x in locations]
+    locations = Location.select()
+    location_names = [x.title for x in locations]
     update.message.reply_text(
         text=_('Please choose where do you want to pickup your order:'),
         reply_markup=create_pickup_location_keyboard(location_names),
@@ -570,25 +417,40 @@ def enter_state_identify_photo(bot, update, user_data):
 def enter_state_identify_stage2(bot, update, user_data):
     update.message.reply_text(text=config.get_identification_stage2_question(),
                               reply_markup=create_cancel_keyboard(),
-                              parse_mode=ParseMode.MARKDOWN, )
+                              parse_mode=ParseMode.MARKDOWN,
+                              )
+
     return BOT_STATE_CHECKOUT_IDENTIFY_STAGE2
 
 
 def enter_state_order_confirm(bot, update, user_data):
-    update.message.reply_text(text=create_confirmation_text(user_data),
-                              reply_markup=create_confirmation_keyboard(),
-                              parse_mode=ParseMode.HTML, )
+    is_pickup = user_data['shipping']['method'] == BUTTON_TEXT_PICKUP
+    shipping_data = user_data['shipping']
+    total = cart.get_cart_total(user_data)
+    delivery_cost = config.get_delivery_fee()
+    product_info = cart.get_products_info(user_data)
+    update.message.reply_text(
+        text=create_confirmation_text(
+            is_pickup, shipping_data, total, delivery_cost, product_info),
+        reply_markup=create_confirmation_keyboard(),
+        parse_mode=ParseMode.HTML,
+    )
+
     return BOT_STATE_ORDER_CONFIRMATION
 
 
 def enter_state_init_order_confirmed(bot, update, user_data):
-    bot.send_message(update.message.chat_id,
-                     text=config.get_order_complete_text().format(
-                         update.message.from_user.first_name),
-                     reply_markup=ReplyKeyboardRemove(), )
-    bot.send_message(update.message.chat_id, text='〰〰〰〰〰〰〰〰〰〰〰〰️',
-                     reply_markup=create_main_keyboard(
-                         config.get_reviews_channel()), )
+    bot.send_message(
+        update.message.chat_id,
+        text=config.get_order_complete_text().format(
+            update.message.from_user.first_name),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    bot.send_message(
+        update.message.chat_id,
+        text='〰〰〰〰〰〰〰〰〰〰〰〰️',
+        reply_markup=create_main_keyboard(config.get_reviews_channel()),
+    )
 
     return BOT_STATE_INIT
 
@@ -793,14 +655,18 @@ def on_confirm_order(bot, update, user_data):
 
     if key == BUTTON_TEXT_CONFIRM:
         try:
-            user = User.filter(telegram_id=user_id).get()
+            user = User.get(telegram_id=user_id)
         except User.DoesNotExist:
             user = User.create(telegram_id=user_id, username=username)
 
         order = Order.create(user=user)
         order_id = order.id
         # TODO move all cart items in order
-
+        is_pickup = user_data['shipping']['method'] == BUTTON_TEXT_PICKUP
+        product_info = cart.get_products_info(user_data)
+        shipping_data = user_data['shipping']
+        total = cart.get_cart_total(user_data)
+        delivery_cost = config.get_delivery_fee()
         # ORDER CONFIRMED, send the details to service channel
         bot.send_message(config.get_service_channel(),
                          text=_('Order confirmed from (@{})').format(
@@ -808,11 +674,15 @@ def on_confirm_order(bot, update, user_data):
                          parse_mode=ParseMode.MARKDOWN, )
 
         bot.send_message(config.get_service_channel(),
-                         text=create_service_notice(user_data, order_id),
+                         text=create_service_notice(
+                             is_pickup, order_id, product_info, shipping_data,
+                             total, delivery_cost),
                          parse_mode=ParseMode.HTML,
                          )
         bot.send_message(config.get_couriers_channel(),
-                         text=create_service_notice(user_data, order_id),
+                         text=create_service_notice(
+                             is_pickup, order_id, product_info, shipping_data,
+                             total, delivery_cost),
                          parse_mode=ParseMode.HTML,
                          reply_markup=create_service_notice_keyboard(
                              update, user_id, order_id),
@@ -887,14 +757,14 @@ def service_channel_courier_query_handler(bot, update, user_data):
     label, user_id, courier_id, order_id, courier_nickname = data.split('|')
     try:
         if order_id:
-            order = Order.filter(id=order_id).get()
+            order = Order.get(id=order_id)
         else:
             raise Order.DoesNotExist()
     except Order.DoesNotExist:
         logger.info('Order №{} not found!'.format(order_id))
     else:
         try:
-            courier = Courier.filter(telegram_id=courier_id).get()
+            courier = Courier.get(id=courier_id)
         except Courier.DoesNotExist:
             courier = Courier.create(
                 telegram_id=courier_id, username=courier_nickname)

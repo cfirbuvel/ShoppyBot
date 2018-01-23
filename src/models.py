@@ -1,8 +1,10 @@
+from os.path import dirname, abspath
 from enum import Enum
 from peewee import Model, CharField, IntegerField, SqliteDatabase, \
     ForeignKeyField, DecimalField, BlobField, BooleanField
 
-db = SqliteDatabase('db.sqlite')
+d = dirname(dirname(abspath(__file__)))
+db = SqliteDatabase(d + '/db.sqlite')
 
 
 # TODO fill example database with new data

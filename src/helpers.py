@@ -1,8 +1,8 @@
-# helper classes for shoppybot
-import sqlite3
 import configparser
 import redis
 import json
+
+from .models import ProductCount, Product
 
 
 class JsonRedis(redis.StrictRedis):
@@ -111,127 +111,9 @@ class ConfigHelper:
         return float(value.strip())
 
 
-class DBHelper:
-    def __init__(self, dbname='shoppybot_db.sqlite'):
-        self.dbname = dbname
-        self.conn = sqlite3.connect(dbname, check_same_thread=False)
-
-    def get_products(self):
-        sql = 'SELECT id, title FROM products'
-        return [x for x in self.conn.execute(sql)]
-
-    def get_product_title(self, id):
-        sql = 'SELECT title FROM products WHERE id = {}'.format(id)
-        value = self.conn.execute(sql).fetchone()
-        if value:
-            return value[0]
-        else:
-            raise RuntimeError('Unknown product id')
-
-    def get_product_images(self, id):
-        sql = 'SELECT image_data FROM product_images WHERE id = {}'.format(id)
-        return [x[0] for x in self.conn.execute(sql)]
-
-    def get_product_image(self, id):
-        sql = 'SELECT image_data FROM product_images WHERE id = {}'.format(id)
-        value = self.conn.execute(sql).fetchone()
-        if value:
-            return value[0]
-        else:
-            raise RuntimeError('Unknown product id')
-
-    def get_product_prices(self, id):
-        sql = 'SELECT count,price FROM product_prices WHERE id = {} ORDER BY ' \
-              'count'.format(id)
-        return [x for x in self.conn.execute(sql)]
-
-    def get_pickup_locations(self):
-        sql = 'SELECT id, name FROM locations'
-        return [x for x in self.conn.execute(sql)]
-
-    def get_pickup_location_name(self, location_id):
-        sql = 'SELECT name FROM locations WHERE id = {}'.format(location_id)
-        value = self.conn.execute(sql).fetchone()
-        if value:
-            return value[0]
-        else:
-            raise RuntimeError('Unknown location id')
-
-    def get_couriers(self):
-        sql = 'SELECT id, nickname FROM couriers'
-        return [x for x in self.conn.execute(sql)]
-
-    def get_courier_nickname(self, courier_id):
-        sql = 'SELECT nickname FROM couriers WHERE id = {}'.format(courier_id)
-        value = self.conn.execute(sql).fetchone()
-        if value:
-            return value[0]
-        else:
-            raise RuntimeError('Unknown courier id')
-
-    def get_couriers_for_location(self, location_id):
-        sql = 'SELECT nickname FROM couriers WHERE location = {}'.format(
-            location_id)
-        return [x for x in self.conn.execute(sql)]
-
-    def get_couriers_for_location_name(self, location_name):
-        location_id = None
-        value = self.conn.execute('SELECT id FROM locations WHERE name=?',
-                                  (location_name,)).fetchone()
-        if value:
-            location_id = value[0]
-        else:
-            raise RuntimeError('Unknown location name')
-
-        sql = 'SELECT nickname FROM couriers WHERE location = {}'.format(
-            location_id)
-        return [x[0] for x in self.conn.execute(sql)]
-
-    def delete_courier(self, courier_id):
-        self.conn.execute('DELETE FROM couriers WHERE ID=?', courier_id)
-        self.conn.commit()
-
-    def add_new_product(self, title, prices, image_data):
-        sql = 'SELECT MAX(id) FROM products'
-
-        max_id = self.conn.execute(sql).fetchone()[0]
-        if max_id:
-            max_id = max_id
-        else:
-            max_id = 0
-
-        new_product_id = max_id + 1
-        self.conn.execute('INSERT INTO products(id, title) VALUES (?, ?)',
-                          (new_product_id, title))
-
-        for count, price in prices:
-            self.conn.execute(
-                'INSERT INTO product_prices(id, count, price) VALUES (?, ?, ?)',
-                (new_product_id, count, price))
-
-        self.conn.execute(
-            'INSERT INTO product_images(id, image_data) VALUES (?, ?)',
-            (new_product_id, image_data))
-        self.conn.commit()
-
-    def delete_product(self, product_id):
-        self.conn.execute('DELETE FROM products WHERE ID=?', product_id)
-        self.conn.execute('DELETE FROM product_prices WHERE ID=?', product_id)
-        self.conn.execute('DELETE FROM product_images WHERE ID=?', product_id)
-        self.conn.commit()
-
-    def add_new_courier(self, name, location_id):
-        self.conn.execute(
-            'INSERT INTO couriers(nickname, location) VALUES (?, ?)',
-            (name, location_id))
-        self.conn.commit()
-
-
-# This class currently provides methods that modify user_data directly
-# It can be improved to have its own expiring cache for per-user carts
 class CartHelper:
     def __init__(self):
-        self.db = DBHelper()
+        pass
 
     def check_cart(self, user_data):
         # check that cart is still here in case we've restarted
@@ -242,8 +124,10 @@ class CartHelper:
     def add(self, user_data, product_id):
         cart = self.check_cart(user_data)
         product_id = str(product_id)
-        prices = self.db.get_product_prices(product_id)
-        counts = [x[0] for x in prices]
+        prices = ProductCount.select().where(
+            ProductCount.product == product_id).order_by(
+            ProductCount.count.asc())
+        counts = [x.count for x in prices]
         min_count = counts[0]
 
         if product_id not in cart:
@@ -256,6 +140,7 @@ class CartHelper:
             # iterate through possible product counts for next price
             next_count_index = (current_count_index + 1) % len(counts)
             cart[product_id] = counts[next_count_index]
+        user_data['cart'] = cart
 
         return user_data
 
@@ -263,12 +148,12 @@ class CartHelper:
         cart = self.check_cart(user_data)
         product_id = str(product_id)
 
-        prices = self.db.get_product_prices(product_id)
-        counts = [x[0] for x in prices]
+        prices = ProductCount.select().where(
+            ProductCount.product == product_id).order_by(
+            ProductCount.count.asc())
+        counts = [x.count for x in prices]
 
-        if product_id not in cart:
-            pass
-        else:
+        if product_id in cart:
             current_count = cart[product_id]
             current_count_index = counts.index(current_count)
 
@@ -277,8 +162,32 @@ class CartHelper:
             else:
                 next_count_index = current_count_index - 1
                 cart[product_id] = counts[next_count_index]
+        user_data['cart'] = cart
 
         return user_data
+
+    def get_products_info(self, user_data):
+        product_ids = self.get_product_ids(user_data)
+        product_info = []
+        for product_id in product_ids:
+            product_info.append(self.get_product_info(user_data, product_id))
+
+        return product_info
+
+    def get_product_info(self, user_data, product_id):
+        product_title = Product.get(id=product_id).title
+        product_count = self.get_product_count(user_data, product_id)
+        product_price = ProductCount.get(
+            product_id=product_id, count=product_count).price
+
+        return product_title, product_count, product_price
+
+    def product_full_info(self, user_data, product_id):
+        product_title = Product.get(id=product_id).title
+        rows = ProductCount.select(
+            ProductCount.count, ProductCount.price).where(
+            ProductCount.product == product_id).tuples()
+        return product_title, rows
 
     def get_product_ids(self, user_data):
         cart = self.check_cart(user_data)
@@ -300,17 +209,13 @@ class CartHelper:
         return len(cart) > 0
 
     def get_product_subtotal(self, user_data, product_id):
-        cart = self.check_cart(user_data)
-        product_id = str(product_id)
+        count = self.get_product_count(user_data, product_id)
 
-        count = 0
-        if product_id in cart:
-            count = cart[product_id]
-
-        prices = self.db.get_product_prices(product_id)
+        rows = ProductCount.filter(product_id=product_id)
         min_price = 0
-        for q, price in prices:
-            if count >= q:
+        for row in rows:
+            price, product_count = row.price, row.count
+            if count >= product_count:
                 min_price = price
 
         return min_price

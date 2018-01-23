@@ -7,7 +7,8 @@ from telegram import ReplyKeyboardRemove
 from telegram.error import TelegramError
 
 from .enums import *
-from .helpers import DBHelper, ConfigHelper
+from .helpers import ConfigHelper
+from .models import Product, ProductCount, Courier, Location
 
 _ = gettext.gettext
 
@@ -20,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 DEBUG = True
 
-db = DBHelper()
 if DEBUG:
     config = ConfigHelper(cfgfilename='test_conf.conf')
 else:
@@ -51,12 +51,20 @@ def on_start_admin(bot, update):
             update.message.from_user.first_name))
         return BOT_STATE_INIT
 
-    msg = "\n".join(['Entering admin mode', 'Use following commands:',
-        '/addproduct - add new product', '/delproduct - delete product',
-        '/addcourier - add courier', '/delcourier - delete courier',
-        '/on - enable shopping', '/off - disable shopping', ])
-    update.message.reply_text(text=msg, reply_markup=ReplyKeyboardRemove(),
-        parse_mode=ParseMode.MARKDOWN, )
+    msg = "\n".join([
+        'Entering admin mode',
+        'Use following commands:',
+        '/addproduct - add new product',
+        '/delproduct - delete product',
+        '/addcourier - add courier',
+        '/delcourier - delete courier',
+        '/on - enable shopping',
+        '/off - disable shopping',
+    ])
+    update.message.reply_text(
+        text=msg, reply_markup=ReplyKeyboardRemove(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
     return ADMIN_INIT
 
 
@@ -77,7 +85,8 @@ def on_admin_txt_product_title(bot, update, user_data):
     update.message.reply_text(
         text='Enter new product prices one per line in the format *COUNT '
              'PRICE*, e.g. *1 10.0*',
-        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN, )
+        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN,
+    )
     return ADMIN_TXT_PRODUCT_PRICES
 
 
@@ -98,8 +107,10 @@ def on_admin_txt_product_prices(bot, update, user_data):
             return ADMIN_TXT_PRODUCT_PRICES
 
     user_data['add_product']['prices'] = prices_list
-    update.message.reply_text(text='Send the new product photo',
-        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN, )
+    update.message.reply_text(
+        text='Send the new product photo',
+        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN,
+    )
     return ADMIN_TXT_PRODUCT_PHOTO
 
 
@@ -112,7 +123,9 @@ def on_admin_txt_product_photo(bot, update, user_data):
     prices = user_data['add_product']['prices']
     image_data = stream.getvalue()
 
-    db.add_new_product(title, prices, image_data)
+    product = Product.create(title=title, image=image_data)
+    for count, price in prices:
+        ProductCount.create(product=product, price=price, count=count)
 
     # clear new product data
     del user_data['add_product']
@@ -124,16 +137,15 @@ def on_admin_txt_product_photo(bot, update, user_data):
 
 
 def on_admin_cmd_delete_product(bot, update):
-    products = db.get_products()
-    if len(products) == 0:
+    products = Product.select()
+    if products.count() == 0:
         update.message.reply_text(text='No products to delete')
         return ADMIN_INIT
     else:
-        products = db.get_products()
         text = 'Choose product ID to delete:'
-        for product_id, title in products:
+        for product in products:
             text += '\n'
-            text += '{}. {}'.format(product_id, title)
+            text += '{}. {}'.format(product.id, product.title)
         update.message.reply_text(text=text)
         return ADMIN_TXT_DELETE_PRODUCT
 
@@ -160,9 +172,9 @@ def on_admin_cmd_add_courier(bot, update):
 def on_admin_cmd_delete_courier(bot, update):
     text = 'Choose courier ID to delete:'
 
-    for courier_id, nickname in db.get_couriers():
+    for courier in Courier.select():
         text += '\n'
-        text += '{}. {}'.format(courier_id, nickname)
+        text += '{}. {}'.format(courier.id, courier.username)
 
     update.message.reply_text(text=text)
     return ADMIN_TXT_DELETE_COURIER
@@ -171,21 +183,17 @@ def on_admin_cmd_delete_courier(bot, update):
 def on_admin_txt_delete_product(bot, update):
     product_id = update.message.text
     try:
-        int(product_id)
         # get title to check if product is valid
-        product_title = db.get_product_title(product_id)
-        db.delete_product(product_id)
+        product = Product.get(id=product_id).title
+        product_title = product.title
+        product.delete_instance()
         update.message.reply_text(
             text='Product {} - {} is deleted'.format(product_id, product_title))
         logger.info('Product %s - %s is deleted', product_id, product_title)
         return ADMIN_INIT
-    except ValueError:
+    except Product.DoesNotExist:
         update.message.reply_text(
             text='Invalid product id, please enter number')
-        return ADMIN_TXT_DELETE_PRODUCT
-    except RuntimeError:
-        update.message.reply_text(
-            text='Unknown product id, please choose from the list')
         return ADMIN_TXT_DELETE_PRODUCT
 
 
@@ -197,9 +205,9 @@ def on_admin_txt_courier_name(bot, update, user_data):
 
     text = 'Enter location ID for this courier (choose number from list below):'
 
-    for location_id, name in db.get_pickup_locations():
+    for location in Location:
         text += '\n'
-        text += '{}. {}'.format(location_id, name)
+        text += '{}. {}'.format(location.id, location.title)
 
     update.message.reply_text(text=text)
     return ADMIN_TXT_COURIER_LOCATION
@@ -208,17 +216,16 @@ def on_admin_txt_courier_name(bot, update, user_data):
 def on_admin_txt_courier_location(bot, update, user_data):
     location_id = update.message.text
     user_data['add_courier']['location_id'] = location_id
-
+    username = user_data['add_courier']['name']
     # check that location name is valid
     try:
-        location_name = db.get_pickup_location_name(location_id)
-    except RuntimeError:
+        location = Location.get(id=location_id)
+    except Location.DoesNotExist:
         update.message.reply_text(
             text='Invalid location id, please enter number')
         return ADMIN_TXT_COURIER_LOCATION
 
-    db.add_new_courier(user_data['add_courier']['name'], location_id)
-
+    Courier.create(username=username, location=location)
     # clear new courier data
     del user_data['add_courier']
 
@@ -231,13 +238,13 @@ def on_admin_txt_delete_courier(bot, update):
 
     # check that courier id is valid
     try:
-        courier_nickname = db.get_courier_nickname(courier_id)
-    except RuntimeError:
+        courier = Courier.get(id=courier_id)
+    except Courier.DoesNotExist:
         update.message.reply_text(
             text='Invalid courier id, please enter number')
         return ADMIN_TXT_DELETE_COURIER
 
-    db.delete_courier(courier_id)
+    courier.delete_instance()
     update.message.reply_text(text='Courier deleted')
     return ADMIN_INIT
 
@@ -246,12 +253,14 @@ def on_admin_txt_delete_courier(bot, update):
 def on_admin_cancel(bot, update):
     update.message.reply_text(
         text='Admin command cancelled, to enter admin mode again type /admin',
-        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN, )
+        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN,
+    )
     return BOT_STATE_INIT
 
 
 def on_admin_fallback(bot, update):
     update.message.reply_text(
         text='Unknown input, type /cancel to exit admin mode',
-        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN, )
+        reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN,
+    )
     return ADMIN_INIT

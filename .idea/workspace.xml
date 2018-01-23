@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="eca03957-1c53-42ce-b808-e3daa7737605" name="Default" comment="">
+    <list default="true" id="eca03957-1c53-42ce-b808-e3daa7737605" name="Default" comment="make big refactor">
+      <change beforePath="" afterPath="$PROJECT_DIR$/src/messages.py" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/db.sqlite" afterPath="$PROJECT_DIR$/db.sqlite" />
+      <change beforePath="$PROJECT_DIR$/models.py" afterPath="$PROJECT_DIR$/src/models.py" />
+      <change beforePath="$PROJECT_DIR$/shoppybot.py" afterPath="$PROJECT_DIR$/shoppybot.py" />
+      <change beforePath="$PROJECT_DIR$/src/admin.py" afterPath="$PROJECT_DIR$/src/admin.py" />
+      <change beforePath="$PROJECT_DIR$/src/helpers.py" afterPath="$PROJECT_DIR$/src/helpers.py" />
     </list>
     <ignored path="$PROJECT_DIR$/.idea/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,7 +19,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/shoppybot$shoppybot.coverage" NAME="shoppybot Coverage Results" MODIFIED="1516584684668" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/shoppybot$shoppybot.coverage" NAME="shoppybot Coverage Results" MODIFIED="1516716694435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -41,11 +46,100 @@
         <item name="schemas" type="d4e8921:DatabaseStructure$FamilyGroup" />
         <item name="main: schema" type="90513b60:SqliteImplModel$Schema" />
       </path>
+      <path>
+        <item name="Database" type="3277223f:DatabaseStructure$DbRootGroup" />
+        <item name="shoppybot_db.sqlite" type="feb32156:DbDataSourceImpl" />
+      </path>
+      <path>
+        <item name="Database" type="3277223f:DatabaseStructure$DbRootGroup" />
+        <item name="shoppybot_db.sqlite" type="feb32156:DbDataSourceImpl" />
+        <item name="schemas" type="d4e8921:DatabaseStructure$FamilyGroup" />
+      </path>
+      <path>
+        <item name="Database" type="3277223f:DatabaseStructure$DbRootGroup" />
+        <item name="shoppybot_db.sqlite" type="feb32156:DbDataSourceImpl" />
+        <item name="schemas" type="d4e8921:DatabaseStructure$FamilyGroup" />
+        <item name="main: schema" type="90513b60:SqliteImplModel$Schema" />
+      </path>
     </expand>
     <select />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="shoppybot.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/shoppybot.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="168">
+              <caret line="445" column="12" lean-forward="false" selection-start-line="445" selection-start-column="12" selection-end-line="445" selection-end-column="12" />
+              <folding>
+                <element signature="e#24#37#0" expanded="true" />
+                <element signature="e#31209#38160#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="helpers.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/helpers.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="10" lean-forward="false" selection-start-line="0" selection-start-column="10" selection-end-line="0" selection-end-column="10" />
+              <folding>
+                <element signature="e#131#389#0" expanded="false" />
+                <element signature="e#165#280#0" expanded="false" />
+                <element signature="e#327#389#0" expanded="false" />
+                <element signature="e#416#3942#0" expanded="false" />
+                <element signature="e#474#1497#0" expanded="false" />
+                <element signature="e#536#1406#0" expanded="false" />
+                <element signature="e#1536#1615#0" expanded="false" />
+                <element signature="e#1660#1745#0" expanded="false" />
+                <element signature="e#1790#1875#0" expanded="false" />
+                <element signature="e#1922#2009#0" expanded="false" />
+                <element signature="e#2060#2151#0" expanded="false" />
+                <element signature="e#2197#2283#0" expanded="false" />
+                <element signature="e#2325#2407#0" expanded="false" />
+                <element signature="e#2447#2527#0" expanded="false" />
+                <element signature="e#2576#2665#0" expanded="false" />
+                <element signature="e#2708#2791#0" expanded="false" />
+                <element signature="e#2833#2915#0" expanded="false" />
+                <element signature="e#2966#3056#0" expanded="false" />
+                <element signature="e#3109#3201#0" expanded="false" />
+                <element signature="e#3261#3399#0" expanded="false" />
+                <element signature="e#3459#3551#0" expanded="false" />
+                <element signature="e#3599#3686#0" expanded="false" />
+                <element signature="e#3729#3811#0" expanded="false" />
+                <element signature="e#3853#3942#0" expanded="false" />
+                <element signature="e#3967#7818#0" expanded="false" />
+                <element signature="e#3995#3999#0" expanded="false" />
+                <element signature="e#4046#4205#0" expanded="false" />
+                <element signature="e#4257#5070#0" expanded="false" />
+                <element signature="e#4591#4671#0" expanded="false" />
+                <element signature="e#4698#5011#0" expanded="false" />
+                <element signature="e#5125#5795#0" expanded="false" />
+                <element signature="e#5426#5736#0" expanded="false" />
+                <element signature="e#5634#5736#0" expanded="false" />
+                <element signature="e#5849#6066#0" expanded="false" />
+                <element signature="e#6131#6413#0" expanded="false" />
+                <element signature="e#6479#6714#0" expanded="false" />
+                <element signature="e#6766#6827#0" expanded="false" />
+                <element signature="e#6893#7070#0" expanded="false" />
+                <element signature="e#7114#7177#0" expanded="false" />
+                <element signature="e#7246#7560#0" expanded="false" />
+                <element signature="e#7418#7534#0" expanded="false" />
+                <element signature="e#7611#7818#0" expanded="false" />
+                <element signature="e#7708#7797#0" expanded="false" />
+                <element signature="e#7920#8409#0" expanded="false" />
+                <element signature="e#8022#8114#0" expanded="false" />
+                <element signature="e#8161#8209#0" expanded="false" />
+                <element signature="e#8260#8312#0" expanded="false" />
+                <element signature="e#8442#8623#0" expanded="false" />
+                <element signature="e#8655#8821#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -56,20 +150,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>create_main_keyboard</find>
-      <find>on_menu</find>
-      <find>'🏪 Our products'</find>
-      <find>Your cart</find>
-      <find>Add more</find>
-      <find>product_add</find>
-      <find>['shipping']['method']</find>
-      <find>update.callback_query</find>
-      <find>OrderItem</find>
-      <find>'^courier</find>
-      <find>enter_state_phone_number_text</find>
-      <find>create_drop_responsibility_keyboard</find>
-      <find>Courier</find>
-      <find>enter_state_location_pickup</find>
       <find>enter_state_courier_location</find>
       <find>enter_state_shipping_method</find>
       <find>get_couriers_channel</find>
@@ -78,14 +158,28 @@
       <find>Order with id {} not found!</find>
       <find>Order notice</find>
       <find>Drop re</find>
-      <find>create_service_notice</find>
       <find>service_channel_courier_query_handler</find>
       <find>dropped</find>
       <find>create_service_notice_keyboard</find>
       <find>TODO</find>
       <find>couriers_channel</find>
       <find>courier</find>
+      <find>create_confirmation_text</find>
+      <find>get_product_ids</find>
+      <find>create_service_notice</find>
+      <find>parent</find>
+      <find>'$'</find>
+      <find>title</find>
+      <find>product_id</find>
+      <find>create_product_description</find>
+      <find>product_remove</find>
+      <find>remove</find>
+      <find>product_full_info</find>
       <find>Order</find>
+      <find>filter</find>
+      <find>DBHelper</find>
+      <find>location</find>
+      <find>db</find>
     </findStrings>
     <replaceStrings>
       <replace>Order № {} not found!</replace>
@@ -105,14 +199,15 @@
         <option value="$PROJECT_DIR$/admin.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/src/shoppybot_helpers.py" />
-        <option value="$PROJECT_DIR$/src/models.py" />
         <option value="$PROJECT_DIR$/he.po" />
         <option value="$PROJECT_DIR$/src/keyboards.py" />
-        <option value="$PROJECT_DIR$/src/admin.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/test_conf.conf" />
         <option value="$PROJECT_DIR$/src/enums.py" />
         <option value="$PROJECT_DIR$/models.py" />
+        <option value="$PROJECT_DIR$/src/messages.py" />
+        <option value="$PROJECT_DIR$/src/models.py" />
+        <option value="$PROJECT_DIR$/src/admin.py" />
         <option value="$PROJECT_DIR$/src/helpers.py" />
         <option value="$PROJECT_DIR$/shoppybot.py" />
       </list>
@@ -248,7 +343,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516585497006</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="update DB defaults">
+      <created>1516697097068</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1516697097068</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TodoView">
@@ -262,6 +364,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32983682" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="SFDX" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -271,13 +374,14 @@
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32958034" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Execute Anonymous" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32958034" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15323566" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15323566" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32967034" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32967034" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3285568" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="SciView" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Log Manager" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39815763" sideWeight="0.47916666" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.39815763" sideWeight="0.47916666" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Salesforce" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -287,7 +391,6 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32967034" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="0" width="740" height="850" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3285568" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
       <window_info id="SFDX" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -327,7 +430,8 @@
     <MESSAGE value="make global changes like session manager, new database storage with ORM, file decomposition and confirmation for courier delivery" />
     <MESSAGE value="fix session client" />
     <MESSAGE value="disable DEBUG mode" />
-    <option name="LAST_COMMIT_MESSAGE" value="disable DEBUG mode" />
+    <MESSAGE value="update DB defaults" />
+    <option name="LAST_COMMIT_MESSAGE" value="update DB defaults" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -341,64 +445,65 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="113" />
+      <option name="time" value="140" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
       <expression>
-        <expression-string>session_client.json_get(user_id)</expression-string>
+        <expression-string>Order.get(id=order_id)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>session_client.json_set(user_id, {})</expression-string>
+        <expression-string>Order.filter(id=order_id).get()</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>session_client.json_set(user_id, user_id)</expression-string>
+        <expression-string>cart.remove(user_data, product_id)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>bot.delete_message(config.get_service_channel(),                        message_id=query.message.message_id)</expression-string>
+        <expression-string>current_count_index</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>query.message.message_id</expression-string>
+        <expression-string>(current_count_index + 1) % len(counts)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>User.filter(telegram_id=user_id).get()</expression-string>
+        <expression-string>counts[next_count_index]</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>User.filter(user_id=user_id).get()</expression-string>
+        <expression-string>counts.index(current_count)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>get_username(update)</expression-string>
+        <expression-string>product.id</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>update.messsage.from_user.id</expression-string>
+        <expression-string>ProductCount.select(             ProductCount.count, ProductCount.price).where(             ProductCount.product == product_id)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>ProductCount.select(             ProductCount.count, ProductCount.price).where(             ProductCount.product == product_id).get().tuples()</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///Library/Python/2.7/site-packages/python_telegram_bot-9.0.0-py2.7.egg/telegram/bot.py" />
-    <entry file="file://$USER_HOME$/testBot/lib/python3.6/site-packages/telegram/update.py" />
-    <entry file="file:///usr/local/Cellar/python3/3.6.4/Frameworks/Python.framework/Versions/3.6/lib/python3.6/configparser.py" />
-    <entry file="file://$USER_HOME$/testBot/lib/python3.6/site-packages/telegram/ext/messagehandler.py" />
     <entry file="file://$PROJECT_DIR$/../testBot2 copy/shoppybot_helpers.py" />
     <entry file="file://$PROJECT_DIR$/../testBot2 copy/shoppybot.py" />
     <entry file="file://$USER_HOME$/testBot/lib/python3.6/site-packages/telegram/ext/callbackqueryhandler.py" />
@@ -464,6 +569,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="261">
           <caret line="552" column="63" lean-forward="true" selection-start-line="552" selection-start-column="63" selection-end-line="552" selection-end-column="63" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1073,6 +1179,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="109">
           <caret line="301" column="4" lean-forward="false" selection-start-line="301" selection-start-column="4" selection-end-line="301" selection-end-column="4" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1137,10 +1244,132 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="51">
+            <caret line="3" column="17" lean-forward="false" selection-start-line="3" selection-start-column="17" selection-end-line="3" selection-end-column="17" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="7" lean-forward="true" selection-start-line="0" selection-start-column="7" selection-end-line="0" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/requirements.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="0" lean-forward="true" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.virtualenvs/shoppybot/lib/python3.6/site-packages/telegram/ext/dispatcher.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="213">
+          <caret line="279" column="25" lean-forward="true" selection-start-line="279" selection-start-column="25" selection-end-line="279" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_conf.conf">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="943">
+          <caret line="87" column="0" lean-forward="false" selection-start-line="87" selection-start-column="0" selection-end-line="87" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/69d2ad96-3a8e-4f36-abf3-c91d12b9894e/main.product_images">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/69d2ad96-3a8e-4f36-abf3-c91d12b9894e/main.products">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.location">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/69d2ad96-3a8e-4f36-abf3-c91d12b9894e/main.product_prices">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.productcount">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.3/python_stubs/1480839385/posix.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="213">
+          <caret line="330" column="8" lean-forward="true" selection-start-line="330" selection-start-column="8" selection-end-line="330" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/python3/3.6.3/Frameworks/Python.framework/Versions/3.6/lib/python3.6/ntpath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2">
+          <caret line="232" column="4" lean-forward="false" selection-start-line="232" selection-start-column="4" selection-end-line="232" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.product">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.courier">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.order">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.virtualenvs/shoppybot/lib/python3.6/site-packages/playhouse/signals.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="401">
+          <caret line="72" column="8" lean-forward="false" selection-start-line="72" selection-start-column="8" selection-end-line="72" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$USER_HOME$/.virtualenvs/shoppybot/lib/python3.6/site-packages/peewee.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="4912" column="12" lean-forward="false" selection-start-line="4912" selection-start-column="12" selection-end-line="4912" selection-end-column="12" />
+        <state relative-caret-position="232">
+          <caret line="4966" column="14" lean-forward="false" selection-start-line="4966" selection-start-column="8" selection-end-line="4966" selection-end-column="14" />
           <folding>
             <element signature="n#!!doc" expanded="false" />
             <element signature="e#1045#2005#0" expanded="false" />
@@ -2120,21 +2349,17 @@
             <element signature="e#169235#169261#0" expanded="false" />
             <element signature="e#169352#169530#0" expanded="false" />
             <element signature="e#169577#169599#0" expanded="false" />
-            <element signature="e#169659#169803#0" expanded="false" />
             <element signature="e#169874#170006#0" expanded="false" />
             <element signature="e#170077#170209#0" expanded="false" />
             <element signature="e#170290#170357#0" expanded="false" />
             <element signature="e#170425#170476#0" expanded="false" />
-            <element signature="e#170524#170547#0" expanded="false" />
             <element signature="e#170606#170640#0" expanded="false" />
-            <element signature="e#170869#171026#0" expanded="false" />
             <element signature="e#171091#171908#0" expanded="false" />
             <element signature="e#171214#171370#0" expanded="false" />
             <element signature="e#171468#171908#0" expanded="false" />
             <element signature="e#171489#171728#0" expanded="false" />
             <element signature="e#171503#171583#0" expanded="false" />
             <element signature="e#171787#171908#0" expanded="false" />
-            <element signature="e#171970#172010#0" expanded="false" />
             <element signature="e#172064#172229#0" expanded="false" />
             <element signature="e#172304#172652#0" expanded="false" />
             <element signature="e#172505#172592#0" expanded="false" />
@@ -2176,7 +2401,6 @@
             <element signature="e#178122#178585#0" expanded="false" />
             <element signature="e#178217#178322#0" expanded="false" />
             <element signature="e#178365#178445#0" expanded="false" />
-            <element signature="e#178666#179108#0" expanded="false" />
             <element signature="e#178692#179046#0" expanded="false" />
             <element signature="e#178817#179046#0" expanded="false" />
             <element signature="e#179142#179193#0" expanded="false" />
@@ -2214,251 +2438,150 @@
             <element signature="e#184246#184347#0" expanded="false" />
             <element signature="e#184443#184599#0" expanded="false" />
             <element signature="e#184657#184817#0" expanded="false" />
-            <marker date="1507479934000" expanded="true" signature="73971:73991" ph="DROP TABLE I... " />
-            <marker date="1507479934000" expanded="true" signature="108843:108886" ph="SELECT COUNT... missing_value" />
-            <marker date="1507479934000" expanded="true" signature="138249:138345" ph="SELECT name sqlite_master" />
-            <marker date="1507479934000" expanded="true" signature="138480:138581" ph="SELECT name,... " />
-            <marker date="1507479934000" expanded="true" signature="142569:142672" ph="SELECT table... pg_tables" />
-            <marker date="1507479934000" expanded="true" signature="142834:143613" ph="SELECT i.rel... pg_class" />
-            <marker date="1507479934000" expanded="true" signature="143891:144071" ph="SELECT colum... columns" />
-            <marker date="1507479934000" expanded="true" signature="144411:144861" ph="SELECT kc.co... table_constraints" />
-            <marker date="1507479934000" expanded="true" signature="145076:145745" ph="SELECT kcu.c... table_constraints" />
-            <marker date="1507479934000" expanded="true" signature="146006:146171" ph="SELECT COUNT... pg_class" />
-            <marker date="1507479934000" expanded="true" signature="148313:148463" ph="SELECT colum... columns" />
-            <marker date="1507479934000" expanded="true" signature="148977:149284" ph="SELECT colum... key_column_usage" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="51">
-            <caret line="3" column="17" lean-forward="false" selection-start-line="3" selection-start-column="17" selection-end-line="3" selection-end-column="17" />
-            <folding />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
+    <entry file="file://$PROJECT_DIR$/src/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="7" lean-forward="true" selection-start-line="0" selection-start-column="7" selection-end-line="0" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" column="0" lean-forward="true" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/admin.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="14" column="17" lean-forward="false" selection-start-line="14" selection-start-column="17" selection-end-line="14" selection-end-column="17" />
+        <state relative-caret-position="230">
+          <caret line="34" column="0" lean-forward="true" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
           <folding>
-            <element signature="e#0#9#0" expanded="false" />
-            <element signature="e#623#931#0" expanded="false" />
-            <element signature="e#680#823#0" expanded="false" />
-            <element signature="e#863#931#0" expanded="false" />
-            <element signature="e#971#1801#0" expanded="false" />
-            <element signature="e#1030#1385#0" expanded="false" />
-            <element signature="e#1407#1661#0" expanded="false" />
-            <element signature="e#2104#2502#0" expanded="false" />
-            <element signature="e#2290#2388#0" expanded="false" />
-            <element signature="e#2566#3276#0" expanded="false" />
-            <element signature="e#2695#3045#0" expanded="false" />
-            <element signature="e#2712#2866#0" expanded="false" />
-            <element signature="e#2911#3045#0" expanded="false" />
-            <element signature="e#3339#3870#0" expanded="false" />
-            <element signature="e#3923#4369#0" expanded="false" />
-            <element signature="e#3987#4068#0" expanded="false" />
-            <element signature="e#4087#4369#0" expanded="false" />
-            <element signature="e#4217#4284#0" expanded="false" />
-            <element signature="e#4414#4521#0" expanded="false" />
-            <element signature="e#4567#4676#0" expanded="false" />
-            <element signature="e#4726#4820#0" expanded="false" />
-            <element signature="e#4873#5115#0" expanded="false" />
-            <element signature="e#4971#5037#0" expanded="false" />
-            <element signature="e#5168#5922#0" expanded="false" />
-            <element signature="e#5218#5596#0" expanded="false" />
-            <element signature="e#5628#5754#0" expanded="false" />
-            <element signature="e#5788#5922#0" expanded="false" />
-            <element signature="e#5984#6413#0" expanded="false" />
-            <element signature="e#6270#6333#0" expanded="false" />
-            <element signature="e#6479#7057#0" expanded="false" />
-            <element signature="e#6719#6848#0" expanded="false" />
-            <element signature="e#7110#7523#0" expanded="false" />
-            <element signature="e#7286#7412#0" expanded="false" />
-            <element signature="e#7611#7819#0" expanded="false" />
-            <element signature="e#7862#8050#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/enums.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="4" column="10" lean-forward="false" selection-start-line="4" selection-start-column="10" selection-end-line="4" selection-end-column="10" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.virtualenvs/shoppybot/lib/python3.6/site-packages/telegram/ext/dispatcher.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="213">
-          <caret line="279" column="25" lean-forward="true" selection-start-line="279" selection-start-column="25" selection-end-line="279" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/helpers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2754">
-          <caret line="342" column="0" lean-forward="false" selection-start-line="342" selection-start-column="0" selection-end-line="342" selection-end-column="0" />
-          <folding>
-            <element signature="e#31#45#0" expanded="false" />
-            <element signature="e#477#1500#0" expanded="false" />
-            <element signature="e#539#1409#0" expanded="false" />
-            <element signature="e#1539#1618#0" expanded="false" />
-            <element signature="e#1663#1748#0" expanded="false" />
-            <element signature="e#1793#1878#0" expanded="false" />
-            <element signature="e#1925#2012#0" expanded="false" />
-            <element signature="e#2063#2154#0" expanded="false" />
-            <element signature="e#2200#2286#0" expanded="false" />
-            <element signature="e#2328#2410#0" expanded="false" />
-            <element signature="e#2450#2530#0" expanded="false" />
-            <element signature="e#2579#2668#0" expanded="false" />
-            <element signature="e#2711#2794#0" expanded="false" />
-            <element signature="e#2836#2918#0" expanded="false" />
-            <element signature="e#2969#3059#0" expanded="false" />
-            <element signature="e#3112#3204#0" expanded="false" />
-            <element signature="e#3264#3402#0" expanded="false" />
-            <element signature="e#3462#3554#0" expanded="false" />
-            <element signature="e#3602#3689#0" expanded="false" />
-            <element signature="e#3732#3814#0" expanded="false" />
-            <element signature="e#3856#3945#0" expanded="false" />
-            <element signature="e#3968#8151#0" expanded="false" />
-            <element signature="e#4026#4115#0" expanded="false" />
-            <element signature="e#4153#4242#0" expanded="false" />
-            <element signature="e#4289#4511#0" expanded="false" />
-            <element signature="e#4559#4683#0" expanded="false" />
-            <element signature="e#4730#4963#0" expanded="false" />
-            <element signature="e#5213#5302#0" expanded="false" />
-            <element signature="e#5365#5597#0" expanded="false" />
-            <element signature="e#5635#5727#0" expanded="false" />
-            <element signature="e#5785#6018#0" expanded="false" />
-            <element signature="e#6082#6223#0" expanded="false" />
-            <element signature="e#6294#6727#0" expanded="false" />
-            <element signature="e#6779#6870#0" expanded="false" />
-            <element signature="e#6938#7642#0" expanded="false" />
-            <element signature="e#7326#7473#0" expanded="false" />
-            <element signature="e#7694#7943#0" expanded="false" />
-            <element signature="e#8003#8151#0" expanded="false" />
-            <element signature="e#8154#8224#0" expanded="false" />
-            <element signature="e#8346#8366#0" expanded="false" />
-            <element signature="e#9825#9927#0" expanded="false" />
-            <element signature="e#10005#10066#0" expanded="false" />
-            <element signature="e#10353#10416#0" expanded="false" />
-            <element signature="e#10766#10814#0" expanded="false" />
-            <element signature="e#10988#11077#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/shoppybot.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="318">
-          <caret line="33" column="36" lean-forward="false" selection-start-line="33" selection-start-column="36" selection-end-line="33" selection-end-column="36" />
-          <folding>
-            <element signature="e#24#37#0" expanded="true" />
+            <element signature="e#0#36#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/keyboards.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="921">
-          <caret line="134" column="33" lean-forward="false" selection-start-line="134" selection-start-column="33" selection-end-line="134" selection-end-column="33" />
-          <folding>
-            <element signature="e#0#106#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="666">
-          <caret line="57" column="68" lean-forward="false" selection-start-line="57" selection-start-column="68" selection-end-line="57" selection-end-column="68" />
-          <folding>
-            <element signature="e#0#21#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test_conf.conf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="943">
-          <caret line="87" column="0" lean-forward="false" selection-start-line="87" selection-start-column="0" selection-end-line="87" selection-end-column="0" />
+        <state relative-caret-position="2295">
+          <caret line="138" column="42" lean-forward="false" selection-start-line="138" selection-start-column="42" selection-end-line="138" selection-end-column="42" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="das://table:/4f7a8eed/69d2ad96-3a8e-4f36-abf3-c91d12b9894e/main.product_images">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
+    <entry file="file://$PROJECT_DIR$/src/messages.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" column="4" lean-forward="false" selection-start-line="6" selection-start-column="4" selection-end-line="6" selection-end-column="4" />
+          <folding>
+            <element signature="e#226#876#0" expanded="false" />
+            <element signature="e#581#647#0" expanded="false" />
+            <element signature="e#693#859#0" expanded="false" />
+            <element signature="e#1005#2141#0" expanded="false" />
+            <element signature="e#1226#1407#0" expanded="false" />
+            <element signature="e#1509#1551#0" expanded="false" />
+            <element signature="e#1581#2038#0" expanded="false" />
+            <element signature="e#1607#1678#0" expanded="false" />
+            <element signature="e#1705#2038#0" expanded="false" />
+            <element signature="e#1732#1807#0" expanded="false" />
+            <element signature="e#1842#2038#0" expanded="false" />
+            <element signature="e#2057#2124#0" expanded="false" />
+            <element signature="e#2274#4307#0" expanded="false" />
+            <element signature="e#2503#2684#0" expanded="false" />
+            <element signature="e#2758#2800#0" expanded="false" />
+            <element signature="e#2830#3287#0" expanded="false" />
+            <element signature="e#2856#2927#0" expanded="false" />
+            <element signature="e#2954#3287#0" expanded="false" />
+            <element signature="e#2981#3056#0" expanded="false" />
+            <element signature="e#3091#3287#0" expanded="false" />
+            <element signature="e#3306#3373#0" expanded="false" />
+            <element signature="e#3545#4290#0" expanded="false" />
+            <element signature="e#3669#3724#0" expanded="false" />
+            <element signature="e#3765#3821#0" expanded="false" />
+            <element signature="e#3871#3927#0" expanded="false" />
+            <element signature="e#3969#4017#0" expanded="false" />
+            <element signature="e#4056#4101#0" expanded="false" />
+            <element signature="e#4145#4190#0" expanded="false" />
+            <element signature="e#4237#4290#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="das://table:/4f7a8eed/69d2ad96-3a8e-4f36-abf3-c91d12b9894e/main.products">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
+    <entry file="file://$PROJECT_DIR$/src/enums.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="0" lean-forward="true" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.order">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
+    <entry file="file://$PROJECT_DIR$/src/helpers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="10" lean-forward="false" selection-start-line="0" selection-start-column="10" selection-end-line="0" selection-end-column="10" />
+          <folding>
+            <element signature="e#131#389#0" expanded="false" />
+            <element signature="e#165#280#0" expanded="false" />
+            <element signature="e#327#389#0" expanded="false" />
+            <element signature="e#416#3942#0" expanded="false" />
+            <element signature="e#474#1497#0" expanded="false" />
+            <element signature="e#536#1406#0" expanded="false" />
+            <element signature="e#1536#1615#0" expanded="false" />
+            <element signature="e#1660#1745#0" expanded="false" />
+            <element signature="e#1790#1875#0" expanded="false" />
+            <element signature="e#1922#2009#0" expanded="false" />
+            <element signature="e#2060#2151#0" expanded="false" />
+            <element signature="e#2197#2283#0" expanded="false" />
+            <element signature="e#2325#2407#0" expanded="false" />
+            <element signature="e#2447#2527#0" expanded="false" />
+            <element signature="e#2576#2665#0" expanded="false" />
+            <element signature="e#2708#2791#0" expanded="false" />
+            <element signature="e#2833#2915#0" expanded="false" />
+            <element signature="e#2966#3056#0" expanded="false" />
+            <element signature="e#3109#3201#0" expanded="false" />
+            <element signature="e#3261#3399#0" expanded="false" />
+            <element signature="e#3459#3551#0" expanded="false" />
+            <element signature="e#3599#3686#0" expanded="false" />
+            <element signature="e#3729#3811#0" expanded="false" />
+            <element signature="e#3853#3942#0" expanded="false" />
+            <element signature="e#3967#7818#0" expanded="false" />
+            <element signature="e#3995#3999#0" expanded="false" />
+            <element signature="e#4046#4205#0" expanded="false" />
+            <element signature="e#4257#5070#0" expanded="false" />
+            <element signature="e#4591#4671#0" expanded="false" />
+            <element signature="e#4698#5011#0" expanded="false" />
+            <element signature="e#5125#5795#0" expanded="false" />
+            <element signature="e#5426#5736#0" expanded="false" />
+            <element signature="e#5634#5736#0" expanded="false" />
+            <element signature="e#5849#6066#0" expanded="false" />
+            <element signature="e#6131#6413#0" expanded="false" />
+            <element signature="e#6479#6714#0" expanded="false" />
+            <element signature="e#6766#6827#0" expanded="false" />
+            <element signature="e#6893#7070#0" expanded="false" />
+            <element signature="e#7114#7177#0" expanded="false" />
+            <element signature="e#7246#7560#0" expanded="false" />
+            <element signature="e#7418#7534#0" expanded="false" />
+            <element signature="e#7611#7818#0" expanded="false" />
+            <element signature="e#7708#7797#0" expanded="false" />
+            <element signature="e#7920#8409#0" expanded="false" />
+            <element signature="e#8022#8114#0" expanded="false" />
+            <element signature="e#8161#8209#0" expanded="false" />
+            <element signature="e#8260#8312#0" expanded="false" />
+            <element signature="e#8442#8623#0" expanded="false" />
+            <element signature="e#8655#8821#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.courier">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
+    <entry file="file://$PROJECT_DIR$/src/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.location">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.productcount">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="das://table:/4f7a8eed/69d2ad96-3a8e-4f36-abf3-c91d12b9894e/main.product_prices">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="das://table:/4f7a8eed/9aeb56b9-54f6-4681-a122-b2406b7f7cf6/main.product">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
+    <entry file="file://$PROJECT_DIR$/shoppybot.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="168">
+          <caret line="445" column="12" lean-forward="false" selection-start-line="445" selection-start-column="12" selection-end-line="445" selection-end-column="12" />
+          <folding>
+            <element signature="e#24#37#0" expanded="true" />
+            <element signature="e#31209#38160#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
