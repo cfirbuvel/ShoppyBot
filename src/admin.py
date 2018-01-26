@@ -1,6 +1,7 @@
 import io
 import logging
 import sys
+import os
 
 from telegram import ParseMode
 from telegram import ReplyKeyboardRemove
@@ -10,10 +11,14 @@ from .enums import *
 from .helpers import ConfigHelper
 from .models import Product, ProductCount, Courier, Location
 
-_ = gettext.gettext
 
+DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-# _ = cat.gettext
+
+_ = gettext.gettext
+if not DEBUG:
+    _ = cat.gettext
+
 
 logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
                     level=logging.INFO)

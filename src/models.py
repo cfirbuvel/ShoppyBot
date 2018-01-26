@@ -7,9 +7,6 @@ d = dirname(dirname(abspath(__file__)))
 db = SqliteDatabase(d + '/db.sqlite')
 
 
-# TODO fill example database with new data
-
-
 class DeliveryMethod(Enum):
     PICKUP = 1
     DELIVERY = 2
@@ -59,7 +56,8 @@ class OrderItem(BaseModel):
     order = ForeignKeyField(Order, related_name='order_items')
     product = ForeignKeyField(Product, related_name='product_items')
     count = IntegerField(default=1)
-    total_price = DecimalField(default=0)
+    total_price = DecimalField(default=0,
+                               verbose_name='total price for each item')
 
 
 def create_tables():

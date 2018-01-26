@@ -1,11 +1,16 @@
+import os
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, \
     KeyboardButton, ReplyKeyboardMarkup
 from .enums import *
 from .helpers import get_username, get_user_id
 
+DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
+
 _ = gettext.gettext
-# _ = cat.gettext
+if not DEBUG:
+    _ = cat.gettext
 
 
 def create_time_keyboard():

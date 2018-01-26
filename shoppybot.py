@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import random
+import os
 
 from telegram.ext import CallbackQueryHandler, CommandHandler,\
     ConversationHandler, Filters, MessageHandler, Updater
@@ -23,17 +24,17 @@ logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
 logger = logging.getLogger(__name__)
 
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
+DEBUG = os.environ.get('DEBUG')
+
 _ = gettext.gettext
-# TODO make option in config to disable translation
-# _ = cat.gettext
+if not DEBUG:
+    _ = cat.gettext
 
 #
 # global variable for on/off
 #
 BOT_ON = True
-DEBUG = True
 
-# TODO make a DEBUG option in config
 if DEBUG:
     config = ConfigHelper(cfgfilename='test_conf.conf')
 else:
@@ -467,10 +468,10 @@ def enter_state_init_order_cancelled(bot, update, user_data):
                          config.get_reviews_channel()), )
     return BOT_STATE_INIT
 
-
 #
 # confirmation handlers
 #
+
 
 def on_shipping_method(bot, update, user_data):
     key = update.message.text
@@ -658,10 +659,14 @@ def on_confirm_order(bot, update, user_data):
             user = User.get(telegram_id=user_id)
         except User.DoesNotExist:
             user = User.create(telegram_id=user_id, username=username)
-
-        order = Order.create(user=user)
+        try:
+            location = Location.get(
+                title=user_data.get('shipping', {}).get('pickup_location'))
+        except Location.DoesNotExist:
+            location = None
+        order = Order.create(user=user, location=location)
         order_id = order.id
-        # TODO move all cart items in order
+        cart.fill_order(user_data, order)
         is_pickup = user_data['shipping']['method'] == BUTTON_TEXT_PICKUP
         product_info = cart.get_products_info(user_data)
         shipping_data = user_data['shipping']
@@ -708,7 +713,8 @@ def on_confirm_order(bot, update, user_data):
         if 'location' in user_data['shipping']:
             bot.send_location(
                 config.get_service_channel(),
-                location=user_data['shipping']['location'], )
+                location=user_data['shipping']['location']
+            )
         # clear cart and shipping data
         user_data['cart'] = {}
         user_data['shipping'] = {}
@@ -764,31 +770,36 @@ def service_channel_courier_query_handler(bot, update, user_data):
         logger.info('Order №{} not found!'.format(order_id))
     else:
         try:
-            courier = Courier.get(id=courier_id)
+            courier = Courier.get(telegram_id=courier_id)
         except Courier.DoesNotExist:
             courier = Courier.create(
                 telegram_id=courier_id, username=courier_nickname)
-        order.courier = courier
-        order.save()
-
-    bot.delete_message(config.get_couriers_channel(),
-                       message_id=query.message.message_id)
-    bot.send_message(config.get_couriers_channel(),
-                     text=query.message.text,
-                     parse_mode=ParseMode.HTML,
-                     reply_markup=create_drop_responsibility_keyboard(
-                         user_id, courier_nickname, order_id),
-                     )
-    bot.send_message(config.get_service_channel(),
-                     text='Courier: {}, apply for order №{}. '
-                          'Confirm this?'.format(courier_nickname, order_id),
-                     reply_markup=create_courier_confirmation_keyboard(
-                         order_id, courier_nickname),
-                     )
-
-    # TODO: might update the couriers keyboard here as well (or not)
-    bot.answer_callback_query(query.id, text=_('Courier {} assigned').format(
-        courier_nickname))
+        if courier.location == order.location:
+            order.courier = courier
+            order.save()
+            bot.delete_message(config.get_couriers_channel(),
+                               message_id=query.message.message_id)
+            bot.send_message(config.get_couriers_channel(),
+                             text=query.message.text, parse_mode=ParseMode.HTML,
+                             reply_markup=create_drop_responsibility_keyboard(
+                                 user_id, courier_nickname, order_id),
+                             )
+            bot.send_message(config.get_service_channel(),
+                             text='Courier: {}, apply for order №{}. '
+                                  'Confirm this?'.format(
+                                 courier_nickname, order_id),
+                             reply_markup=create_courier_confirmation_keyboard(
+                                 order_id, courier_nickname),
+                             )
+            bot.answer_callback_query(
+                query.id,
+                text=_('Courier {} assigned').format(courier_nickname))
+        else:
+            bot.send_message(config.get_couriers_channel(),
+                             text='{} your location and customer locations are '
+                                  'different'.format(courier_nickname),
+                             parse_mode=ParseMode.HTML
+                             )
 
 
 #

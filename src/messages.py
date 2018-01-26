@@ -1,7 +1,12 @@
 import gettext
+import os
 
+DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
+
 _ = gettext.gettext
+if not DEBUG:
+    _ = cat.gettext
 
 
 def create_product_description(product_title, product_prices, product_count,

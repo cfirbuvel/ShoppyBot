@@ -1,9 +1,12 @@
 import gettext
+import os
 
+DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-_ = gettext.gettext
-# _ = cat.gettext
 
+_ = gettext.gettext
+if not DEBUG:
+    _ = cat.gettext
 
 (BOT_STATE_INIT,
  BOT_STATE_CHECKOUT_SHIPPING,

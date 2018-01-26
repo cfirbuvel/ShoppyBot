@@ -2,7 +2,7 @@ import configparser
 import redis
 import json
 
-from .models import ProductCount, Product
+from .models import ProductCount, Product, Order, OrderItem
 
 
 class JsonRedis(redis.StrictRedis):
@@ -166,21 +166,25 @@ class CartHelper:
 
         return user_data
 
-    def get_products_info(self, user_data):
+    def get_products_info(self, user_data, for_order=False):
         product_ids = self.get_product_ids(user_data)
         product_info = []
         for product_id in product_ids:
-            product_info.append(self.get_product_info(user_data, product_id))
+            product_info.append(
+                self.get_product_info(user_data, product_id, for_order))
 
         return product_info
 
-    def get_product_info(self, user_data, product_id):
+    def get_product_info(self, user_data, product_id, for_order=False):
         product_title = Product.get(id=product_id).title
         product_count = self.get_product_count(user_data, product_id)
         product_price = ProductCount.get(
             product_id=product_id, count=product_count).price
-
-        return product_title, product_count, product_price
+        if for_order:
+            result = product_id, product_count, product_price
+        else:
+            result = product_title, product_count, product_price
+        return result
 
     def product_full_info(self, user_data, product_id):
         product_title = Product.get(id=product_id).title
@@ -228,6 +232,12 @@ class CartHelper:
             subtotal = self.get_product_subtotal(user_data, product_id)
             total += subtotal
         return total
+
+    def fill_order(self, user_data, order):
+        products = self.get_products_info(user_data, for_order=True)
+        for p_id, p_count, p_price in products:
+            OrderItem.create(order=order, product_id=p_id, count=p_count,
+                             total_price=p_price)
 
 
 session_client = JsonRedis(host='localhost', port=6379, db=0)
