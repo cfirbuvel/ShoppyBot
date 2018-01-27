@@ -189,7 +189,7 @@ def on_admin_txt_delete_product(bot, update):
     product_id = update.message.text
     try:
         # get title to check if product is valid
-        product = Product.get(id=product_id).title
+        product = Product.get(id=product_id)
         product_title = product.title
         product.delete_instance()
         update.message.reply_text(
