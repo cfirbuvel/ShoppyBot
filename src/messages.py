@@ -15,7 +15,7 @@ def create_product_description(product_title, product_prices, product_count,
     text += '\n\n'
     text += '〰️'
     text += '\n'
-    text += _('<b>Delivery Fee: {}$</b>'.format(delivery_fee))
+    text += _('<b>Delivery Fee: {}$</b>').format(delivery_fee)
     text += '\n'
     text += _('for orders blow 500$')
     text += '\n'
@@ -72,7 +72,7 @@ def create_confirmation_text(is_pickup, shipping_data, total, delivery_cost,
                 text += _('Total: <b>${}</b>').format(total)
             else:
                 text += '\n\n'
-                text += _('<b>Delivery Fee: {}$</b>'.format(delivery_cost))
+                text += _('<b>Delivery Fee: {}$</b>').format(delivery_cost)
                 text += '\n'
                 text += _('Total: <b>${}</b>').format(total + delivery_cost)
     else:
@@ -114,7 +114,7 @@ def create_service_notice(is_pickup, order_id, product_info, shipping_data,
                 text += _('Total: <b>${}</b>').format(total)
             else:
                 text += '\n\n'
-                text += _('<b>Delivery Fee: {}$</b>'.format(delivery_cost))
+                text += _('<b>Delivery Fee: {}$</b>').format(delivery_cost)
                 text += '\n'
                 text += _('Total: <b>${}</b>').format(total + delivery_cost)
     else:
@@ -125,32 +125,39 @@ def create_service_notice(is_pickup, order_id, product_info, shipping_data,
 
     text += '\n\n'
     text += _('Shipping details:')
-    text += '\n'
+    text += '\n\n'
 
     for key, value in shipping_data.items():
-        text += '\n'
         if key == 'vip':
             text += _('Vip Costumer')
+            text += '\n'
         if key == 'photo_question':
             text += _('Photo question: ')
             text += value
+            text += '\n'
         if key == 'method':
             text += _('Pickup/Delivery: ')
             text += value
+            text += '\n'
         if key == 'pickup_location':
             text += _('Pickup location: ')
             text += value
+            text += '\n'
         if key == 'address':
             text += _('Address: ')
             text += value
+            text += '\n'
         if key == 'time':
             text += _('When: ')
             text += value
+            text += '\n'
         if key == 'time_text':
             text += _('Time: ')
             text += value
+            text += '\n'
         if key == 'phone_number':
             text += _('Phone number: ')
             text += value
+            text += '\n'
 
     return text
