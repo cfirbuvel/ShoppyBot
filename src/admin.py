@@ -229,8 +229,9 @@ def on_admin_txt_courier_location(bot, update, user_data):
         update.message.reply_text(
             text='Invalid location id, please enter number')
         return ADMIN_TXT_COURIER_LOCATION
-
-    Courier.create(username=username, location=location)
+    # TODO check and find courier's telegram_id
+    # member = bot.getChatMember(chat_id, user_id)
+    Courier.create(username=username, location=location, telegram_id=0)
     # clear new courier data
     del user_data['add_courier']
 
