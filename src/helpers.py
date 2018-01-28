@@ -108,7 +108,7 @@ class ConfigHelper:
 
     def get_delivery_fee(self):
         value = self.config.get(self.section, 'delivery_fee')
-        return float(value.strip())
+        return int(value.strip())
 
 
 class CartHelper:
