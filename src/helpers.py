@@ -2,7 +2,7 @@ import configparser
 import redis
 import json
 
-from .models import ProductCount, Product, Order, OrderItem
+from .models import ProductCount, Product, Order, OrderItem, Courier
 
 
 class JsonRedis(redis.StrictRedis):
@@ -264,6 +264,11 @@ def get_user_session(user_id):
 
     return user_session
 
+
+def get_courier_nickname(location):
+    courier_location = Courier.location
+
+    return courier_location
 
 def get_username(update):
     if update.callback_query is not None:

@@ -658,7 +658,10 @@ def on_confirm_order(bot, update, user_data):
         try:
             user = User.get(telegram_id=user_id)
         except User.DoesNotExist:
-            user = User.create(telegram_id=user_id, username=username)
+            if not username:
+                user = User.create(telegram_id=user_id, username='None')
+            else:
+                user = User.create(telegram_id=user_id, username=username)
         try:
             location = Location.get(
                 title=user_data.get('shipping', {}).get('pickup_location'))

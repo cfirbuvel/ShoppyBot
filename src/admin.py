@@ -23,9 +23,6 @@ if not DEBUG:
 logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-DEBUG = True
-
 if DEBUG:
     config = ConfigHelper(cfgfilename='test_conf.conf')
 else:
