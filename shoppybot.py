@@ -664,7 +664,7 @@ def on_confirm_order(bot, update, user_data):
             user = User.get(telegram_id=user_id)
         except User.DoesNotExist:
             if not username:
-                user = User.create(telegram_id=user_id, username='None')
+                user = User.create(telegram_id=user_id, username=_('No User Name'))
             else:
                 user = User.create(telegram_id=user_id, username=username)
         try:
@@ -692,24 +692,13 @@ def on_confirm_order(bot, update, user_data):
                              total, delivery_cost),
                          parse_mode=ParseMode.HTML,
                          )
-        bot.send_message(config.get_couriers_channel(),
-                         text=create_service_notice(
-                             is_pickup, order_id, product_info, shipping_data,
-                             total, delivery_cost),
-                         parse_mode=ParseMode.HTML,
-                         reply_markup=create_service_notice_keyboard(
-                             update, user_id, order_id),
-                         )
 
         if 'photo_id' in user_data['shipping']:
             bot.send_photo(config.get_service_channel(),
                            photo=user_data['shipping']['photo_id'],
                            caption=_('Stage 1 Identification - Selfie'),
                            parse_mode=ParseMode.MARKDOWN, )
-            bot.send_photo(config.get_couriers_channel(),
-                           photo=user_data['shipping']['photo_id'],
-                           caption=_('Stage 1 Identification - Selfie'),
-                           parse_mode=ParseMode.MARKDOWN, )
+
 
         if 'stage2_id' in user_data['shipping']:
             bot.send_photo(
@@ -723,6 +712,32 @@ def on_confirm_order(bot, update, user_data):
                 config.get_service_channel(),
                 location=user_data['shipping']['location']
             )
+
+        if config.get_has_courier_option():
+            bot.send_message(config.get_couriers_channel(),
+                             text=_('Order confirmed from (@{})').format(
+                                 update.message.from_user.username),
+                             parse_mode=ParseMode.MARKDOWN, )
+            bot.send_message(config.get_couriers_channel(),
+                             text=create_service_notice(
+                                 is_pickup, order_id, product_info, shipping_data,
+                                 total, delivery_cost),
+                             parse_mode=ParseMode.HTML,
+                             reply_markup=create_service_notice_keyboard(
+                                 update, user_id, order_id),
+                             )
+            if 'photo_id' in user_data['shipping']:
+                bot.send_photo(config.get_couriers_channel(),
+                               photo=user_data['shipping']['photo_id'],
+                               caption=_('Stage 1 Identification - Selfie'),
+                               parse_mode=ParseMode.MARKDOWN, )
+
+            if 'location' in user_data['shipping']:
+                bot.send_location(
+                    config.get_couriers_channel(),
+                    location=user_data['shipping']['location']
+                )
+
         # clear cart and shipping data
         user_data['cart'] = {}
         user_data['shipping'] = {}

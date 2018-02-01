@@ -33,6 +33,7 @@ class ConfigHelper:
                       'identification_required': True,
                       'identification_stage2_required': False,
                       'identification_stage2_question': None,
+                      'has_courier_option': True,
                       'only_for_customers': False, 'delivery_fee': 0, })
         self.config.read(cfgfilename, encoding='utf-8')
         self.section = 'Settings'
@@ -100,6 +101,10 @@ class ConfigHelper:
 
     def get_only_for_customers(self):
         value = self.config.getboolean(self.section, 'only_for_customers')
+        return value
+
+    def get_has_courier_option(self):
+        value = self.config.getboolean(self.section, 'has_courier_option')
         return value
 
     def get_vip_customers(self):
