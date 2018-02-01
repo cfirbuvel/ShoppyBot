@@ -163,8 +163,13 @@ def make_unconfirm(bot, update, user_data):
 
 def on_start(bot, update, user_data):
     user_id = get_user_id(update)
+    username = get_username(update)
     user_data = get_user_session(user_id)
-
+    try:
+        user = User.get(telegram_id=user_id)
+    except User.DoesNotExist:
+        user = User(telegram_id=user_id, username=username)
+        user.save()
     if BOT_ON:
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
             logger.info('Starting session for user %s, language: %s',

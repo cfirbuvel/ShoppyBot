@@ -9,7 +9,7 @@ from telegram.error import TelegramError
 
 from .enums import *
 from .helpers import ConfigHelper
-from .models import Product, ProductCount, Courier, Location
+from .models import Product, ProductCount, Courier, Location, User
 
 
 DEBUG = os.environ.get('DEBUG')
@@ -226,13 +226,24 @@ def on_admin_txt_courier_location(bot, update, user_data):
         update.message.reply_text(
             text='Invalid location id, please enter number')
         return ADMIN_TXT_COURIER_LOCATION
-    # TODO check and find courier's telegram_id
-    # member = bot.getChatMember(chat_id, user_id)
-    Courier.create(username=username, location=location, telegram_id=0)
-    # clear new courier data
-    del user_data['add_courier']
+    try:
+        user = User.get(username=username)
+    except User.DoesNotExist:
+        update.message.reply_text(
+            text='User with username @{} not found. Plz register user first, '
+                 'then register courier.'.format(username))
+    else:
+        try:
+            Courier.get(username=username)
+            update.message.reply_text(text='Courier with username @{} '
+                                           'already added'.format(username))
+        except Courier.DoesNotExist:
+            Courier.create(username=username, location=location,
+                           telegram_id=user.telegram_id)
+            # clear new courier data
+            del user_data['add_courier']
+            update.message.reply_text(text='Courier added')
 
-    update.message.reply_text(text='Courier added')
     return ADMIN_INIT
 
 
