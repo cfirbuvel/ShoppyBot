@@ -63,7 +63,11 @@ class ConfigHelper:
         return value.strip()
 
     def get_welcome_text(self):
-        value = self.config.get(self.section, 'welcome_text')
+        session = get_config_session()
+        session_value = None
+        if session.get('welcome_text'):
+            session_value = session.get('welcome_text')
+        value = session_value or self.config.get(self.section, 'welcome_text')
         return value.strip()
 
     def get_order_text(self):
@@ -114,6 +118,11 @@ class ConfigHelper:
     def get_delivery_fee(self):
         value = self.config.get(self.section, 'delivery_fee')
         return int(value.strip())
+
+    def get_default_settings(self, session):
+        if not session.get('welcome_text'):
+            session['welcome_text'] = self.get_welcome_text()
+        return session
 
 
 class CartHelper:
@@ -245,9 +254,6 @@ class CartHelper:
                              total_price=p_price)
 
 
-session_client = JsonRedis(host='localhost', port=6379, db=0)
-
-
 def get_user_session(user_id):
     user_session = session_client.json_get(user_id)
     updated = False
@@ -275,6 +281,7 @@ def get_courier_nickname(location):
 
     return courier_location
 
+
 def get_username(update):
     if update.callback_query is not None:
         username = update.callback_query.from_user.username
@@ -291,3 +298,16 @@ def get_user_id(update):
         user_id = update.message.from_user.id
 
     return user_id
+
+
+def get_config_session():
+    session = session_client.json_get('config')
+
+    if not session:
+        session_client.json_set('config', {})
+        session = session_client.json_get('config')
+
+    return session
+
+
+session_client = JsonRedis(host='localhost', port=6379, db=0)

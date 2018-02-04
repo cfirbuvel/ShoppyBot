@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
 import random
-import os
 
 from telegram.ext import CallbackQueryHandler, CommandHandler,\
-    ConversationHandler, Filters, MessageHandler, Updater
+    ConversationHandler, Filters, MessageHandler, Updater, BaseFilter
 
 from src.admin import *
 from src.enums import *
@@ -783,7 +782,9 @@ def checkout_fallback_command_handler(bot, update, user_data):
 def service_channel_courier_query_handler(bot, update, user_data):
     query = update.callback_query
     data = query.data
-    label, user_id, courier_id, order_id, courier_nickname = data.split('|')
+    courier_nickname = get_username(update)
+    courier_id = get_user_id(update)
+    label, user_id, order_id = data.split('|')
     try:
         if order_id:
             order = Order.get(id=order_id)
@@ -824,10 +825,6 @@ def service_channel_courier_query_handler(bot, update, user_data):
                              parse_mode=ParseMode.HTML
                              )
 
-
-#
-# main
-#
 
 def main():
     user_conversation_handler = ConversationHandler(
@@ -903,6 +900,7 @@ def main():
             # admin states
             #
             ADMIN_INIT: [
+                CommandHandler('setconfig', on_admin_cmd_set_config),
                 CommandHandler('addproduct', on_admin_cmd_add_product),
                 CommandHandler('delproduct', on_admin_cmd_delete_product),
                 CommandHandler('addcourier', on_admin_cmd_add_courier),
@@ -911,6 +909,10 @@ def main():
                 CommandHandler('off', on_admin_cmd_bot_off),
                 CommandHandler('cancel', on_admin_cancel),
                 MessageHandler(Filters.all, on_admin_fallback),
+            ],
+            ADMIN_SET_WELCOME_MESSAGE: [
+                MessageHandler(Filters.text, new_welcome_message),
+                CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_TXT_PRODUCT_TITLE: [
                 MessageHandler(Filters.text, on_admin_txt_product_title,
@@ -969,6 +971,9 @@ def main():
         CallbackQueryHandler(make_unconfirm,
                              pattern='^notconfirmed',
                              pass_user_data=True))
+    updater.dispatcher.add_handler(
+        CallbackQueryHandler(set_welcome_message,
+                             pattern='^setwelcomemessage'))
     updater.dispatcher.add_error_handler(on_error)
     updater.start_polling()
     updater.idle()

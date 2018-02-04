@@ -1,16 +1,15 @@
 import io
 import logging
 import sys
-import os
 
 from telegram import ParseMode
 from telegram import ReplyKeyboardRemove
 from telegram.error import TelegramError
 
 from .enums import *
-from .helpers import ConfigHelper
+from .helpers import ConfigHelper, session_client, get_config_session
 from .models import Product, ProductCount, Courier, Location, User
-
+from .keyboards import create_bot_config_keyboard
 
 DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
@@ -56,6 +55,7 @@ def on_start_admin(bot, update):
     msg = "\n".join([
         'Entering admin mode',
         'Use following commands:',
+        '/setconfig - set bot\'s config',
         '/addproduct - add new product',
         '/delproduct - delete product',
         '/addcourier - add courier',
@@ -68,6 +68,17 @@ def on_start_admin(bot, update):
         parse_mode=ParseMode.MARKDOWN,
     )
     return ADMIN_INIT
+
+
+def on_admin_cmd_set_config(bot, update):
+    session = get_config_session()
+    session = config.get_default_settings(session)
+    session_client.json_set('config', session)
+    update.message.reply_text(
+        text='Settings',
+        reply_markup=create_bot_config_keyboard(session),
+    )
+    return ADMIN_SET_WELCOME_MESSAGE
 
 
 def on_admin_cmd_add_product(bot, update):
@@ -278,3 +289,18 @@ def on_admin_fallback(bot, update):
         reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN,
     )
     return ADMIN_INIT
+
+
+def set_welcome_message(bot, update):
+    update.callback_query.message.reply_text(
+        text='Enter new welcome text',
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+def new_welcome_message(bot, update):
+    new_text = update.message.text
+    session = get_config_session()
+    session['welcome_text'] = new_text
+    session_client.json_set('config', session)
+    return on_start_admin(bot, update)

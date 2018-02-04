@@ -73,19 +73,14 @@ def create_shipping_keyboard():
 
 
 def create_service_notice_keyboard(update, user_id, order_id):
-    buttons = []
 
-    courier_nickname = get_username(update)
-    courier_id = get_user_id(update)
-
-    buttons.append(
+    buttons = [
         [
             InlineKeyboardButton(
                 _('Take Responsibility'),
-                callback_data='courier|{}|{}|{}|{}'.format(
-                    user_id, courier_id, order_id, courier_nickname))
+                callback_data='courier|{}|{}'.format(user_id, order_id))
         ]
-    )
+    ]
     return InlineKeyboardMarkup(buttons)
 
 
@@ -145,3 +140,13 @@ def create_product_keyboard(product_id, user_data, cart):
         button_row.append(button)
 
     return InlineKeyboardMarkup([button_row])
+
+
+def create_bot_config_keyboard(session):
+    button_row = [
+        [InlineKeyboardButton(
+                _('Set welcome message'),
+                callback_data='setwelcomemessage'
+        )],
+    ]
+    return InlineKeyboardMarkup(button_row, resize_keyboard=True)
