@@ -826,6 +826,16 @@ def service_channel_courier_query_handler(bot, update, user_data):
                              )
 
 
+def send_welcome_message(bot, update):
+    if str(update.message.chat_id) == config.get_couriers_channel():
+        user = update.message.new_chat_member
+        if user:
+            bot.send_message(
+                config.get_couriers_channel(),
+                text='Hello {}, id number {}'.format(
+                    user.username, user.id))
+
+
 def main():
     user_conversation_handler = ConversationHandler(
         entry_points=[CommandHandler('start', on_start, pass_user_data=True),
@@ -959,6 +969,8 @@ def main():
         ])
 
     updater = Updater(config.get_api_token())
+    updater.dispatcher.add_handler(MessageHandler(
+        [Filters.status_update], send_welcome_message))
     updater.dispatcher.add_handler(user_conversation_handler)
     updater.dispatcher.add_handler(
         CallbackQueryHandler(service_channel_courier_query_handler,
