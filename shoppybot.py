@@ -938,6 +938,11 @@ def main():
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel),
             ],
+            ADMIN_TXT_COURIER_ID: [
+                MessageHandler(Filters.text, on_admin_txt_courier_id,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
             ADMIN_TXT_COURIER_LOCATION: [
                 MessageHandler(Filters.text, on_admin_txt_courier_location,
                                pass_user_data=True),

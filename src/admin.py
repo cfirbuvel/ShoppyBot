@@ -216,6 +216,15 @@ def on_admin_txt_courier_name(bot, update, user_data):
     user_data['add_courier'] = {}
     user_data['add_courier']['name'] = name
 
+    text = 'Enter courier telegram_id'
+    update.message.reply_text(text=text)
+    return ADMIN_TXT_COURIER_ID
+
+
+def on_admin_txt_courier_id(bot, update, user_data):
+    telegram_id = update.message.text
+    user_data['add_courier']['telegram_id'] = telegram_id
+
     text = 'Enter location ID for this courier (choose number from list below):'
 
     for location in Location:
@@ -230,6 +239,7 @@ def on_admin_txt_courier_location(bot, update, user_data):
     location_id = update.message.text
     user_data['add_courier']['location_id'] = location_id
     username = user_data['add_courier']['name']
+    telegram_id = user_data['add_courier']['telegram_id']
     # check that location name is valid
     try:
         location = Location.get(id=location_id)
@@ -238,22 +248,15 @@ def on_admin_txt_courier_location(bot, update, user_data):
             text='Invalid location id, please enter number')
         return ADMIN_TXT_COURIER_LOCATION
     try:
-        user = User.get(username=username)
-    except User.DoesNotExist:
-        update.message.reply_text(
-            text='User with username @{} not found. Plz register user first, '
-                 'then register courier.'.format(username))
-    else:
-        try:
-            Courier.get(username=username)
-            update.message.reply_text(text='Courier with username @{} '
-                                           'already added'.format(username))
-        except Courier.DoesNotExist:
-            Courier.create(username=username, location=location,
-                           telegram_id=user.telegram_id)
-            # clear new courier data
-            del user_data['add_courier']
-            update.message.reply_text(text='Courier added')
+        Courier.get(username=username, telegram_id=telegram_id)
+        update.message.reply_text(text='Courier with username @{} '
+                                       'already added'.format(username))
+    except Courier.DoesNotExist:
+        Courier.create(username=username, location=location,
+                       telegram_id=telegram_id)
+        # clear new courier data
+        del user_data['add_courier']
+        update.message.reply_text(text='Courier added')
 
     return ADMIN_INIT
 
