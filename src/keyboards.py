@@ -45,7 +45,7 @@ def create_cancel_keyboard():
         [
             KeyboardButton(BUTTON_TEXT_BACK),
             KeyboardButton(BUTTON_TEXT_CANCEL)
-         ],
+        ],
     ]
     return ReplyKeyboardMarkup(button_row, resize_keyboard=True)
 
@@ -73,7 +73,6 @@ def create_shipping_keyboard():
 
 
 def create_service_notice_keyboard(update, user_id, order_id):
-
     buttons = [
         [
             InlineKeyboardButton(
@@ -98,12 +97,12 @@ def create_courier_confirmation_keyboard(order_id, courier_name):
 
 def create_drop_responsibility_keyboard(user_id, courier_nickname, order_id):
     buttons = [
-        InlineKeyboardButton(_('Assigned to @{}'.format(courier_nickname)),
-                             url='https://t.me/{}'.format(courier_nickname)),
-        InlineKeyboardButton(_('Drop responsibility'),
-                             callback_data='dropped|{}'.format(order_id)),
+        [InlineKeyboardButton(_('Assigned to @{}').format(courier_nickname),
+                              url='https://t.me/{}'.format(courier_nickname))],
+        [InlineKeyboardButton(_('Drop responsibility'),
+                              callback_data='dropped|{}'.format(order_id))],
     ]
-    return InlineKeyboardMarkup([buttons])
+    return InlineKeyboardMarkup(buttons)
 
 
 def create_main_keyboard(review_channel):
@@ -145,8 +144,8 @@ def create_product_keyboard(product_id, user_data, cart):
 def create_bot_config_keyboard(session):
     button_row = [
         [InlineKeyboardButton(
-                _('Set welcome message'),
-                callback_data='setwelcomemessage'
+            _('Set welcome message'),
+            callback_data='setwelcomemessage'
         )],
     ]
     return InlineKeyboardMarkup(button_row, resize_keyboard=True)

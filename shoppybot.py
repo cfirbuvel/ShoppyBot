@@ -828,12 +828,14 @@ def service_channel_courier_query_handler(bot, update, user_data):
 
 def send_welcome_message(bot, update):
     if str(update.message.chat_id) == config.get_couriers_channel():
-        user = update.message.new_chat_member
-        if user:
-            bot.send_message(
-                config.get_couriers_channel(),
-                text='Hello {}, id number {}'.format(
-                    user.username, user.id))
+        users = update.message.new_chat_members
+        for user in users:
+            if user:
+                bot.send_message(
+                    config.get_couriers_channel(),
+                    text=_('Hello `@{}`, ID number `{}`').format(
+                        user.username, user.id),
+                    parse_mode=ParseMode.MARKDOWN)
 
 
 def main():
@@ -865,7 +867,7 @@ def main():
             BOT_STATE_CHECKOUT_LOCATION_DELIVERY: [
                 CallbackQueryHandler(checkout_fallback_command_handler,
                                      pass_user_data=True),
-                MessageHandler(Filters.text | Filters.location,
+                MessageHandler(Filters.text or Filters.location,
                                on_shipping_delivery_address,
                                pass_user_data=True),
             ],
@@ -970,7 +972,7 @@ def main():
 
     updater = Updater(config.get_api_token())
     updater.dispatcher.add_handler(MessageHandler(
-        [Filters.status_update], send_welcome_message))
+        Filters.status_update, send_welcome_message))
     updater.dispatcher.add_handler(user_conversation_handler)
     updater.dispatcher.add_handler(
         CallbackQueryHandler(service_channel_courier_query_handler,
