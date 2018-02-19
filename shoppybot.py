@@ -414,7 +414,7 @@ def enter_state_identify_photo(bot, update, user_data):
     else:
         session['shipping']['photo_question'] = {}
         session['shipping']['photo_question'] = create_photo_question()
-
+    session_client.json_set(user_id, session)
     text = _('Please provide an identification picture. {}').format(
         session['shipping']['photo_question'])
     update.message.reply_text(text=text, reply_markup=create_cancel_keyboard(),
@@ -701,7 +701,6 @@ def on_confirm_order(bot, update, user_data):
                            caption=_('Stage 1 Identification - Selfie'),
                            parse_mode=ParseMode.MARKDOWN, )
 
-
         if 'stage2_id' in user_data['shipping']:
             bot.send_photo(
                 config.get_service_channel(),
@@ -722,8 +721,8 @@ def on_confirm_order(bot, update, user_data):
                              parse_mode=ParseMode.MARKDOWN, )
             bot.send_message(config.get_couriers_channel(),
                              text=create_service_notice(
-                                 is_pickup, order_id, product_info, shipping_data,
-                                 total, delivery_cost),
+                                 is_pickup, order_id, product_info,
+                                 shipping_data, total, delivery_cost),
                              parse_mode=ParseMode.HTML,
                              reply_markup=create_service_notice_keyboard(
                                  update, user_id, order_id),
