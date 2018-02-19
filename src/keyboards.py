@@ -106,7 +106,7 @@ def create_drop_responsibility_keyboard(user_id, courier_nickname, order_id):
     return InlineKeyboardMarkup([buttons])
 
 
-def create_main_keyboard(review_channel):
+def create_main_keyboard(review_channel, is_admin):
     main_button_list = [
         [InlineKeyboardButton(_('🏪 Our products'),
                               callback_data='menu_products')],
@@ -118,6 +118,10 @@ def create_main_keyboard(review_channel):
         [InlineKeyboardButton(_('☎ Contact info'),
                               callback_data='menu_contact')],
     ]
+    # if is_admin:
+    #     main_button_list.append(
+    #         [InlineKeyboardButton(_('☎ Settings'),
+    #                               callback_data='settings')])
     return InlineKeyboardMarkup(main_button_list)
 
 
@@ -150,3 +154,14 @@ def create_bot_config_keyboard(session):
         )],
     ]
     return InlineKeyboardMarkup(button_row, resize_keyboard=True)
+
+
+# def admin_create_bot_config_keyboard():
+#     button_row = [
+#         [InlineKeyboardButton(_('Set welcome message'), callback_data='setwelcomemessage')],
+#         [InlineKeyboardButton(_('Add courier'), callback_data='setwelcomemessage')],
+#         [InlineKeyboardButton(_('Delete courier'), callback_data='setwelcomemessage')],
+#         [InlineKeyboardButton(_('Turn ON/OFF bot'), callback_data='turnonoff')],
+#         [InlineKeyboardButton(_('Back'), callback_data='goback')],
+#     ]
+#     return InlineKeyboardMarkup(button_row)

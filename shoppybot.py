@@ -29,11 +29,6 @@ _ = gettext.gettext
 if not DEBUG:
     _ = cat.gettext
 
-#
-# global variable for on/off
-#
-BOT_ON = True
-
 if DEBUG:
     config = ConfigHelper(cfgfilename='test_conf.conf')
 else:
@@ -169,6 +164,8 @@ def on_start(bot, update, user_data):
     except User.DoesNotExist:
         user = User(telegram_id=user_id, username=username)
         user.save()
+    config_session = get_config_session()
+    BOT_ON = config_session['bot_on_off'] if 'bot_on_off' in config_session else True
     if BOT_ON:
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
             logger.info('Starting session for user %s, language: %s',
@@ -177,7 +174,8 @@ def on_start(bot, update, user_data):
             update.message.reply_text(
                 text=config.get_welcome_text().format(
                     update.message.from_user.first_name),
-                reply_markup=create_main_keyboard(config.get_reviews_channel()),
+                reply_markup=create_main_keyboard(config.get_reviews_channel(),
+                                                  is_admin(bot, user_id)),
             )
             return BOT_STATE_INIT
         else:
@@ -204,7 +202,8 @@ def on_menu(bot, update, user_data=None):
     data = query.data
     user_id = get_user_id(update)
     user_data = get_user_session(user_id)
-
+    config_session = get_config_session()
+    BOT_ON = config_session['bot_on_off'] if 'bot_on_off' in config_session else True
     if BOT_ON:
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
             if data == 'menu_products':
@@ -315,6 +314,8 @@ def on_menu(bot, update, user_data=None):
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
                                       parse_mode=ParseMode.HTML, )
+            # elif data == 'settings':
+            #     pass
             else:
                 logger.warn('Unknown query: %s', query.data)
         else:
@@ -991,6 +992,12 @@ def main():
     updater.dispatcher.add_handler(
         CallbackQueryHandler(set_welcome_message,
                              pattern='^setwelcomemessage'))
+    # updater.dispatcher.add_handler(
+    #     CallbackQueryHandler(set_on_off_bot,
+    #                          pattern='^turnonoff'))
+    # updater.dispatcher.add_handler(
+    #     CallbackQueryHandler(on_start_admin,
+    #                          pattern='^goback'))
     updater.dispatcher.add_error_handler(on_error)
     updater.start_polling()
     updater.idle()

@@ -2,14 +2,14 @@ import io
 import logging
 import sys
 
-from telegram import ParseMode
+from telegram import ParseMode, Message, CallbackQuery
 from telegram import ReplyKeyboardRemove
 from telegram.error import TelegramError
 
 from .enums import *
-from .helpers import ConfigHelper, session_client, get_config_session
+from .helpers import ConfigHelper, session_client, get_config_session, get_user_session, get_user_id
 from .models import Product, ProductCount, Courier, Location, User
-from .keyboards import create_bot_config_keyboard
+from .keyboards import create_bot_config_keyboard, admin_create_bot_config_keyboard
 
 DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
@@ -43,7 +43,7 @@ def is_admin(bot, user_id):
 
 
 def on_start_admin(bot, update):
-    if not is_admin(bot, update.message.from_user.id):
+    if not is_admin(bot, get_user_id(update)):
         logger.info('User %s, @%s rejected (not admin)',
                     update.message.from_user.id,
                     update.message.from_user.username)
@@ -52,22 +52,28 @@ def on_start_admin(bot, update):
             update.message.from_user.first_name))
         return BOT_STATE_INIT
 
-    msg = "\n".join([
-        'Entering admin mode',
-        'Use following commands:',
-        '/setconfig - set bot\'s config',
-        '/addproduct - add new product',
-        '/delproduct - delete product',
-        '/addcourier - add courier',
-        '/delcourier - delete courier',
-        '/on - enable shopping',
-        '/off - disable shopping',
-    ])
-    update.message.reply_text(
-        text=msg, reply_markup=ReplyKeyboardRemove(),
-        parse_mode=ParseMode.MARKDOWN,
-    )
-    return ADMIN_INIT
+    session = get_user_session(get_user_id(update))
+    # if 'menu' in session:
+    #     pass
+    # else:
+    #     session['menu'] = {}
+    # config_session = get_config_session()
+    # bot_on_off = 'ON'
+    # if 'bot_on_off' in config_session:
+    #     if not config_session['bot_on_off']:
+    #         bot_on_off = 'OFF'
+    # message = update.message
+    # if not message:
+    #     message = update.callback_query.message
+    #     bot.edit_message_text(chat_id=message.chat_id,
+    #                           message_id=message.message_id,
+    #                           reply_markup=admin_create_bot_config_keyboard(),
+    #                           text='BOT status: {}'.format(bot_on_off))
+    # else:
+    #     message.reply_text(
+    #         text='BOT status: {}'.format(bot_on_off),
+    #         reply_markup=admin_create_ bot_config_keyboard(),
+    #     )
 
 
 def on_admin_cmd_set_config(bot, update):
@@ -307,3 +313,14 @@ def new_welcome_message(bot, update):
     session['welcome_text'] = new_text
     session_client.json_set('config', session)
     return on_start_admin(bot, update)
+
+#
+# def set_on_off_bot(bot, update):
+#     session = get_config_session()
+#     if 'bot_on_off' in session:
+#         bot_on_off = not session['bot_on_off']
+#     else:
+#         bot_on_off = False
+#     session['bot_on_off'] = bot_on_off
+#     session_client.json_set('config', session)
+#     return on_start_admin(bot, update)
