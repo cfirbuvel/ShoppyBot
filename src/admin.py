@@ -9,7 +9,8 @@ from telegram.error import TelegramError
 from .enums import *
 from .helpers import ConfigHelper, session_client, get_config_session, get_user_session, get_user_id
 from .models import Product, ProductCount, Courier, Location, User
-from .keyboards import create_bot_config_keyboard, admin_create_bot_config_keyboard
+from .keyboards import create_bot_config_keyboard
+# from .keyboards import admin_create_bot_config_keyboard
 
 DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
