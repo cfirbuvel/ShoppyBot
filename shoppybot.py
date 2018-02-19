@@ -241,7 +241,8 @@ def on_menu(bot, update, user_data=None):
                                  text=config.get_order_text().format(
                                      _('#Our_Species:')),
                                  reply_markup=create_main_keyboard(
-                                     config.get_reviews_channel()),
+                                     config.get_reviews_channel(),
+                                     is_admin(bot, user_id)),
                                  parse_mode=ParseMode.HTML, )
             elif data == 'menu_order':
                 if cart.is_full(user_data):
@@ -265,14 +266,15 @@ def on_menu(bot, update, user_data=None):
                                       message_id=query.message.message_id,
                                       text=config.get_working_hours(),
                                       reply_markup=create_main_keyboard(
-                                          config.get_reviews_channel()),
+                                          config.get_reviews_channel(),
+                                          is_admin(bot, user_id)),
                                       parse_mode=ParseMode.MARKDOWN, )
             elif data == 'menu_contact':
                 bot.edit_message_text(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
                                       text=config.get_contact_info(),
                                       reply_markup=create_main_keyboard(
-                                          config.get_reviews_channel()),
+                                          config.get_reviews_channel(), is_admin(bot, user_id)),
                                       parse_mode=ParseMode.MARKDOWN, )
             elif data.startswith('product_add'):
                 product_id = int(data.split('|')[1])

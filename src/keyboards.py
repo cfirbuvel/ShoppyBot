@@ -105,7 +105,7 @@ def create_drop_responsibility_keyboard(user_id, courier_nickname, order_id):
     return InlineKeyboardMarkup(buttons)
 
 
-def create_main_keyboard(review_channel, is_admin):
+def create_main_keyboard(review_channel, is_admin=None):
     main_button_list = [
         [InlineKeyboardButton(_('🏪 Our products'),
                               callback_data='menu_products')],
