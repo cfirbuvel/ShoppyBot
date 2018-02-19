@@ -184,13 +184,18 @@ class CartHelper:
         product_ids = self.get_product_ids(user_data)
         product_info = []
         for product_id in product_ids:
-            product_info.append(
-                self.get_product_info(user_data, product_id, for_order))
+            info = self.get_product_info(user_data, product_id, for_order)
+            if info:
+                product_info.append(info)
 
         return product_info
 
     def get_product_info(self, user_data, product_id, for_order=False):
-        product_title = Product.get(id=product_id).title
+        result = None
+        try:
+            product_title = Product.get(id=product_id).title
+        except Product.DoesNotExist:
+            return result
         product_count = self.get_product_count(user_data, product_id)
         product_price = ProductCount.get(
             product_id=product_id, count=product_count).price
@@ -201,7 +206,10 @@ class CartHelper:
         return result
 
     def product_full_info(self, user_data, product_id):
-        product_title = Product.get(id=product_id).title
+        try:
+            product_title = Product.get(id=product_id).title
+        except Product.DoesNotExist:
+            return '', []
         rows = ProductCount.select(
             ProductCount.count, ProductCount.price).where(
             ProductCount.product == product_id).tuples()
