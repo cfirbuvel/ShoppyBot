@@ -43,7 +43,7 @@ cart = CartHelper()
 
 def is_vip_customer(bot, user_id):
     if not config.get_vip_customers():
-        return True
+        return False
 
     chat_id = config.get_vip_customers_channel()
 
