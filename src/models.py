@@ -1,7 +1,8 @@
+import datetime
 from os.path import dirname, abspath
 from enum import Enum
 from peewee import Model, CharField, IntegerField, SqliteDatabase, \
-    ForeignKeyField, DecimalField, BlobField, BooleanField
+    ForeignKeyField, DecimalField, BlobField, BooleanField, DateField
 
 d = dirname(dirname(abspath(__file__)))
 db = SqliteDatabase(d + '/db.sqlite')
@@ -50,6 +51,7 @@ class Order(BaseModel):
     shipping_time = CharField(null=True)
     location = ForeignKeyField(Location, null=True)
     confirmed = BooleanField(default=False)
+    date_created = DateField(default=datetime.datetime.now, null=True)
 
 
 class OrderItem(BaseModel):

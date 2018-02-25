@@ -117,10 +117,10 @@ def create_main_keyboard(review_channel, is_admin=None):
         [InlineKeyboardButton(_('☎ Contact info'),
                               callback_data='menu_contact')],
     ]
-    # if is_admin:
-    #     main_button_list.append(
-    #         [InlineKeyboardButton(_('☎ Settings'),
-    #                               callback_data='settings')])
+    if is_admin:
+        main_button_list.append(
+            [InlineKeyboardButton(_('⚙️ Settings'),
+                                  callback_data='menu_settings')])
     return InlineKeyboardMarkup(main_button_list)
 
 
@@ -152,15 +152,64 @@ def create_bot_config_keyboard(session):
             callback_data='setwelcomemessage'
         )],
     ]
+
     return InlineKeyboardMarkup(button_row, resize_keyboard=True)
 
 
-# def admin_create_bot_config_keyboard():
-#     button_row = [
-#         [InlineKeyboardButton(_('Set welcome message'), callback_data='setwelcomemessage')],
-#         [InlineKeyboardButton(_('Add courier'), callback_data='setwelcomemessage')],
-#         [InlineKeyboardButton(_('Delete courier'), callback_data='setwelcomemessage')],
-#         [InlineKeyboardButton(_('Turn ON/OFF bot'), callback_data='turnonoff')],
-#         [InlineKeyboardButton(_('Back'), callback_data='goback')],
-#     ]
-#     return InlineKeyboardMarkup(button_row)
+def create_admin_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('📈 Statistics'),
+                              callback_data='settings_statistics')],
+        [InlineKeyboardButton(_('⚙ Bot settings'),
+                              callback_data='settings_bot')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='settings_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)
+
+
+def create_statistics_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('💵 Get statistics by all sells'),
+                              callback_data='statistics_all_sells')],
+        [InlineKeyboardButton(_('🛵 Get statistics by different couriers'),
+                              callback_data='statistics_couriers')],
+        [InlineKeyboardButton(_('🏠 Get statistics by locations'),
+                              callback_data='statistics_locations')],
+        [InlineKeyboardButton(_('🌕 Get statistics yearly'),
+                              callback_data='statistics_yearly')],
+        [InlineKeyboardButton(_('🌛 Get statistics monthly'),
+                              callback_data='statistics_monthly')],
+        [InlineKeyboardButton(_('🌝 Get statistics by user'),
+                              callback_data='statistics_user')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='statistics_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)
+
+
+def create_bot_settings_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('🛵 Couriers'),
+                              callback_data='bot_settings_couriers')],
+        [InlineKeyboardButton(_('✉️ Channels'),
+                              callback_data='bot_settings_channels')],
+        [InlineKeyboardButton(_('⏰ Edit working hours'),
+                              callback_data='bot_settings_edit_working_hours')],
+        [InlineKeyboardButton(_('💳 Order options'),
+                              callback_data='bot_settings_order_options')],
+        [InlineKeyboardButton(_('🔥 Client ban-list'),
+                              callback_data='bot_settings_ban_list')],
+        [InlineKeyboardButton(_('☎️ Edit contact info'),
+                              callback_data='bot_settings_edit_contact_info')],
+        [InlineKeyboardButton(_('⚡️ Bot ON/OFF'),
+                              callback_data='bot_settings_bot_on_off')],
+        [InlineKeyboardButton(_('💫 Reset all data'),
+                              callback_data='bot_settings_reset_all_data')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='bot_settings_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)

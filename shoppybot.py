@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import random
+import datetime
 
 from telegram.ext import CallbackQueryHandler, CommandHandler,\
     ConversationHandler, Filters, MessageHandler, Updater, BaseFilter
@@ -14,7 +15,9 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_service_notice_keyboard, create_main_keyboard, \
     create_pickup_location_keyboard, create_product_keyboard, \
     create_shipping_keyboard, create_cancel_keyboard, create_time_keyboard, \
-    create_confirmation_keyboard, create_courier_confirmation_keyboard
+    create_confirmation_keyboard, create_courier_confirmation_keyboard, \
+    create_admin_keyboard, create_statistics_keyboard, \
+    create_bot_settings_keyboard
 from src.models import create_tables, User, Courier, Order, OrderItem, \
     Product, ProductCount
 
@@ -274,7 +277,8 @@ def on_menu(bot, update, user_data=None):
                                       message_id=query.message.message_id,
                                       text=config.get_contact_info(),
                                       reply_markup=create_main_keyboard(
-                                          config.get_reviews_channel(), is_admin(bot, user_id)),
+                                          config.get_reviews_channel(),
+                                          is_admin(bot, user_id)),
                                       parse_mode=ParseMode.MARKDOWN, )
             elif data.startswith('product_add'):
                 product_id = int(data.split('|')[1])
@@ -316,8 +320,14 @@ def on_menu(bot, update, user_data=None):
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
                                       parse_mode=ParseMode.HTML, )
-            # elif data == 'settings':
-            #     pass
+            elif data == 'menu_settings':
+                bot.edit_message_text(chat_id=query.message.chat_id,
+                                      message_id=query.message.message_id,
+                                      text='Settings',
+                                      reply_markup=create_admin_keyboard(),
+                                      parse_mode=ParseMode.MARKDOWN, )
+                query.answer()
+                return ADMIN_MENU
             else:
                 logger.warn('Unknown query: %s', query.data)
         else:
@@ -448,6 +458,7 @@ def enter_state_order_confirm(bot, update, user_data):
 
 
 def enter_state_init_order_confirmed(bot, update, user_data):
+    user_id = get_user_id(update)
     bot.send_message(
         update.message.chat_id,
         text=config.get_order_complete_text().format(
@@ -457,13 +468,15 @@ def enter_state_init_order_confirmed(bot, update, user_data):
     bot.send_message(
         update.message.chat_id,
         text='〰〰〰〰〰〰〰〰〰〰〰〰️',
-        reply_markup=create_main_keyboard(config.get_reviews_channel()),
+        reply_markup=create_main_keyboard(
+            config.get_reviews_channel(), is_admin(bot, user_id)),
     )
 
     return BOT_STATE_INIT
 
 
 def enter_state_init_order_cancelled(bot, update, user_data):
+    user_id = get_user_id(update)
     update.message.reply_text(text=_('<b>Order cancelled</b>'),
                               reply_markup=ReplyKeyboardRemove(),
                               parse_mode=ParseMode.HTML, )
@@ -472,7 +485,7 @@ def enter_state_init_order_cancelled(bot, update, user_data):
                      text=config.get_welcome_text().format(
                          update.message.from_user.first_name),
                      reply_markup=create_main_keyboard(
-                         config.get_reviews_channel()), )
+                         config.get_reviews_channel(), is_admin(bot, user_id)))
     return BOT_STATE_INIT
 
 #
@@ -674,7 +687,8 @@ def on_confirm_order(bot, update, user_data):
                 title=user_data.get('shipping', {}).get('pickup_location'))
         except Location.DoesNotExist:
             location = None
-        order = Order.create(user=user, location=location)
+        order = Order.create(user=user, location=location,
+                             date_created=datetime.datetime.now())
         order_id = order.id
         cart.fill_order(user_data, order)
         is_pickup = user_data['shipping']['method'] == BUTTON_TEXT_PICKUP
@@ -840,6 +854,193 @@ def send_welcome_message(bot, update):
                     parse_mode=ParseMode.MARKDOWN)
 
 
+def on_settings_menu(bot, update):
+    query = update.callback_query
+    data = query.data
+    user_id = get_user_id(update)
+    if data == 'settings_statistics':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Statistics',
+                              reply_markup=create_statistics_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_STATISTICS
+    elif data == 'settings_bot':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Bot settings',
+                              reply_markup=create_bot_settings_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BOT_SETTINGS
+    elif data == 'settings_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=config.get_welcome_text().format(
+                                  update.callback_query.from_user.first_name),
+                              reply_markup=create_main_keyboard(
+                                  config.get_reviews_channel(),
+                                  is_admin(bot, user_id)),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return BOT_STATE_INIT
+    else:
+        logger.info('Unknown command - {}'.format(data))
+        bot.send_message(
+            query.message.chat_id,
+            text=_('Unknown command'),
+            reply_markup=None,
+            parse_mode=ParseMode.HTML,
+        )
+        return ConversationHandler.END
+
+
+def on_statistics_menu(bot, update):
+    query = update.callback_query
+    data = query.data
+    user_id = get_user_id(update)
+    if data == 'statistics_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Settings',
+                              reply_markup=create_admin_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_MENU
+    elif data == 'statistics_all_sells':
+        orders_count = Order.select().where(Order.confirmed == True).count()
+        total_price = 0
+        orders_items = OrderItem.select().join(Order).where(
+            Order.confirmed == True)
+        for order_item in orders_items:
+            total_price += order_item.count * order_item.total_price
+        message = 'Total confirmed orders count: {}, total cost: {}'.format(
+            orders_count, total_price)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=message,
+                              reply_markup=create_statistics_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_STATISTICS
+    elif data == 'statistics_couriers':
+        msg = ''
+        couriers = Courier.select()
+        for courier in couriers:
+            orders_count = Order.select().where(Order.courier == courier,
+                                                Order.confirmed == True).count()
+            total_price = 0
+            orders_items = OrderItem.select().join(Order).where(
+                Order.confirmed == True, Order.courier == courier)
+            for order_item in orders_items:
+                total_price += order_item.count * order_item.total_price
+            msg += '\nCourier: @{}, orders: {}, orders cost {}'.format(
+                courier.username, orders_count, total_price)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_statistics_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_STATISTICS
+    elif data == 'statistics_locations':
+        msg = ''
+        locations = Location.select()
+        for location in locations:
+            orders_count = Order.select().where(Order.location == location,
+                                                Order.confirmed == True).count()
+            total_price = 0
+            orders_items = OrderItem.select().join(Order).where(
+                Order.confirmed == True, Order.location == location)
+            for order_item in orders_items:
+                total_price += order_item.count * order_item.total_price
+            msg += '\nLocation: {}, orders: {}, orders cost {}'.format(
+                location.title, orders_count, total_price)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_statistics_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_STATISTICS
+    elif data == 'statistics_yearly':
+        now = datetime.datetime.now()
+        orders_count = Order.select().where(Order.date_created.year == now.year,
+                                            Order.confirmed == True).count()
+        total_price = 0
+        orders_items = OrderItem.select().join(Order).where(
+            Order.confirmed == True, Order.date_created.year == now.year)
+        for order_item in orders_items:
+            total_price += order_item.count * order_item.total_price
+        msg = '\nOrders: {}, orders cost {}'.format(
+            orders_count, total_price)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_statistics_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_STATISTICS
+    elif data == 'statistics_monthly':
+        now = datetime.datetime.now()
+        orders_count = Order.select().where(Order.date_created.year == now.month,
+                                            Order.confirmed == True).count()
+        total_price = 0
+        orders_items = OrderItem.select().join(Order).where(
+            Order.confirmed == True, Order.date_created.year == now.month)
+        for order_item in orders_items:
+            total_price += order_item.count * order_item.total_price
+        msg = '\nOrders: {}, orders cost {}'.format(
+            orders_count, total_price)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_statistics_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_STATISTICS
+    elif data == 'statistics_user':
+        msg = ''
+        users = User.select()
+        for user in users:
+            orders_count = Order.select().where(Order.user == user,
+                                                Order.confirmed == True).count()
+            total_price = 0
+            orders_items = OrderItem.select().join(Order).where(
+                Order.confirmed == True, Order.location == user)
+            for order_item in orders_items:
+                total_price += order_item.count * order_item.total_price
+            msg += '\nUser: @{}, orders: {}, orders cost {}'.format(
+                user.username, orders_count, total_price)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_statistics_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_STATISTICS
+
+    return ConversationHandler.END
+
+
+def on_bot_settings_menu(bot, update):
+    query = update.callback_query
+    data = query.data
+    user_id = get_user_id(update)
+    user_data = get_user_session(user_id)
+    config_session = get_config_session()
+    if data == 'bot_settings_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Settings',
+                              reply_markup=create_admin_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_MENU
+    return ConversationHandler.END
+
+
 def main():
     user_conversation_handler = ConversationHandler(
         entry_points=[CommandHandler('start', on_start, pass_user_data=True),
@@ -913,6 +1114,12 @@ def main():
             #
             # admin states
             #
+            ADMIN_MENU: [CallbackQueryHandler(
+                    on_settings_menu, pattern='^settings')],
+            ADMIN_STATISTICS: [CallbackQueryHandler(
+                on_statistics_menu, pattern='^statistics')],
+            ADMIN_BOT_SETTINGS: [CallbackQueryHandler(
+                on_bot_settings_menu, pattern='^bot_settings')],
             ADMIN_INIT: [
                 CommandHandler('setconfig', on_admin_cmd_set_config),
                 CommandHandler('addproduct', on_admin_cmd_add_product),
@@ -992,15 +1199,6 @@ def main():
         CallbackQueryHandler(make_unconfirm,
                              pattern='^notconfirmed',
                              pass_user_data=True))
-    updater.dispatcher.add_handler(
-        CallbackQueryHandler(set_welcome_message,
-                             pattern='^setwelcomemessage'))
-    # updater.dispatcher.add_handler(
-    #     CallbackQueryHandler(set_on_off_bot,
-    #                          pattern='^turnonoff'))
-    # updater.dispatcher.add_handler(
-    #     CallbackQueryHandler(on_start_admin,
-    #                          pattern='^goback'))
     updater.dispatcher.add_error_handler(on_error)
     updater.start_polling()
     updater.idle()

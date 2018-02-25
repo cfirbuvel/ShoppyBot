@@ -53,29 +53,6 @@ def on_start_admin(bot, update):
             update.message.from_user.first_name))
         return BOT_STATE_INIT
 
-    session = get_user_session(get_user_id(update))
-    # if 'menu' in session:
-    #     pass
-    # else:
-    #     session['menu'] = {}
-    # config_session = get_config_session()
-    # bot_on_off = 'ON'
-    # if 'bot_on_off' in config_session:
-    #     if not config_session['bot_on_off']:
-    #         bot_on_off = 'OFF'
-    # message = update.message
-    # if not message:
-    #     message = update.callback_query.message
-    #     bot.edit_message_text(chat_id=message.chat_id,
-    #                           message_id=message.message_id,
-    #                           reply_markup=admin_create_bot_config_keyboard(),
-    #                           text='BOT status: {}'.format(bot_on_off))
-    # else:
-    #     message.reply_text(
-    #         text='BOT status: {}'.format(bot_on_off),
-    #         reply_markup=admin_create_ bot_config_keyboard(),
-    #     )
-
 
 def on_admin_cmd_set_config(bot, update):
     session = get_config_session()
