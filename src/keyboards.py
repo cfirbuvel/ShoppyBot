@@ -213,3 +213,33 @@ def create_bot_settings_keyboard():
     ]
 
     return InlineKeyboardMarkup(main_button_list)
+
+
+def create_bot_couriers_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('🛵 View couriers'),
+                              callback_data='bot_couriers_view')],
+        [InlineKeyboardButton(_('➕ Add couriers'),
+                              callback_data='bot_couriers_add')],
+        [InlineKeyboardButton(_('➖ Remove couriers'),
+                              callback_data='bot_couriers_delete')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='bot_couriers_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)
+
+
+def create_bot_channels_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('✉️ View channels'),
+                              callback_data='bot_channels_view')],
+        [InlineKeyboardButton(_('➕ Add channel'),
+                              callback_data='bot_channels_add')],
+        [InlineKeyboardButton(_('➖ Remove channel'),
+                              callback_data='bot_channels_remove')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='bot_channels_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)

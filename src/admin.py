@@ -7,10 +7,12 @@ from telegram import ReplyKeyboardRemove
 from telegram.error import TelegramError
 
 from .enums import *
-from .helpers import ConfigHelper, session_client, get_config_session, get_user_session, get_user_id
+from .helpers import ConfigHelper, session_client, get_config_session, \
+    get_user_session, get_user_id, set_config_session
 from .models import Product, ProductCount, Courier, Location, User
-from .keyboards import create_bot_config_keyboard
-# from .keyboards import admin_create_bot_config_keyboard
+from .keyboards import create_bot_config_keyboard, \
+    create_bot_couriers_keyboard, create_bot_channels_keyboard, \
+    create_bot_settings_keyboard
 
 DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
@@ -52,17 +54,6 @@ def on_start_admin(bot, update):
             'Sorry {}, you are not authorized to administrate this bot').format(
             update.message.from_user.first_name))
         return BOT_STATE_INIT
-
-
-def on_admin_cmd_set_config(bot, update):
-    session = get_config_session()
-    session = config.get_default_settings(session)
-    session_client.json_set('config', session)
-    update.message.reply_text(
-        text='Settings',
-        reply_markup=create_bot_config_keyboard(session),
-    )
-    return ADMIN_SET_WELCOME_MESSAGE
 
 
 def on_admin_cmd_add_product(bot, update):
@@ -240,9 +231,17 @@ def on_admin_txt_courier_location(bot, update, user_data):
                        telegram_id=telegram_id)
         # clear new courier data
         del user_data['add_courier']
-        update.message.reply_text(text='Courier added')
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Courier added',
+                         reply_markup=create_bot_couriers_keyboard(),
+                         parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_COURIERS
 
-    return ADMIN_INIT
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Couriers',
+                     reply_markup=create_bot_couriers_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_COURIERS
 
 
 def on_admin_txt_delete_courier(bot, update):
@@ -253,12 +252,15 @@ def on_admin_txt_delete_courier(bot, update):
         courier = Courier.get(id=courier_id)
     except Courier.DoesNotExist:
         update.message.reply_text(
-            text='Invalid courier id, please enter number')
+            text='Invalid courier id, please enter correct id')
         return ADMIN_TXT_DELETE_COURIER
 
     courier.delete_instance()
-    update.message.reply_text(text='Courier deleted')
-    return ADMIN_INIT
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Courier deleted',
+                     reply_markup=create_bot_couriers_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_COURIERS
 
 
 # additional cancel handler for admin commands
@@ -292,13 +294,115 @@ def new_welcome_message(bot, update):
     session_client.json_set('config', session)
     return on_start_admin(bot, update)
 
-#
-# def set_on_off_bot(bot, update):
-#     session = get_config_session()
-#     if 'bot_on_off' in session:
-#         bot_on_off = not session['bot_on_off']
-#     else:
-#         bot_on_off = False
-#     session['bot_on_off'] = bot_on_off
-#     session_client.json_set('config', session)
-#     return on_start_admin(bot, update)
+
+def on_admin_select_channel_type(bot, update, user_data):
+    channel_type = int(update.message.text)
+    if channel_type in range(1, 5):
+        user_data['add_channel'] = {}
+        user_data['add_channel']['channel_type'] = channel_type - 1
+        update.message.reply_text(
+            text='Enter channel address',
+            reply_markup=ReplyKeyboardRemove(),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        return ADMIN_CHANNELS_ADDRESS
+
+    types = ['Reviews', 'Service', 'Customer', 'Vip customer', 'Courier']
+    msg = ''
+    for i, channel_type in enumerate(types, start=1):
+        msg += '\n{} - {}'.format(i, channel_type)
+    msg += '\nSelect channel type'
+    update.message.reply_text(
+        text=msg,
+        reply_markup=ReplyKeyboardRemove(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+    return ADMIN_CHANNELS_SELECT_TYPE
+
+
+def on_admin_add_channel_address(bot, update, user_data):
+    types = ['reviews_channel', 'service_channel', 'customers_channel',
+             'vip_customers_channel', 'couriers_channel']
+    channel_address = update.message.text
+    channel_type = user_data['add_channel']['channel_type']
+    config_session = get_config_session()
+    config_session[types[channel_type]] = channel_address
+    set_config_session(config_session)
+    user_data['add_channel'] = {}
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Channels',
+                     reply_markup=create_bot_channels_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_CHANNELS
+
+
+def on_admin_remove_channel(bot, update, user_data):
+    types = ['reviews_channel', 'service_channel', 'customers_channel',
+             'vip_customers_channel', 'couriers_channel']
+    channel_type = int(update.message.text)
+    if channel_type in range(1, 5):
+        config_session = get_config_session()
+        config_session[types[channel_type - 1]] = None
+        set_config_session(config_session)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Channel was removed',
+                         reply_markup=create_bot_channels_keyboard(),
+                         parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_CHANNELS
+
+    types = ['Reviews', 'Service', 'Customer', 'Vip customer', 'Courier']
+    msg = ''
+    for i, channel_type in enumerate(types, start=1):
+        msg += '\n{} - {}'.format(i, channel_type)
+    msg += '\nSelect channel type'
+    update.message.reply_text(
+        text=msg,
+        reply_markup=ReplyKeyboardRemove(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+    return ADMIN_CHANNELS_REMOVE
+
+
+def on_admin_edit_working_hours(bot, update, user_data):
+    new_working_hours = update.message.text
+    config_session = get_config_session()
+    config_session['working_hours'] = new_working_hours
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Working hours was changed',
+                     reply_markup=create_bot_settings_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_BOT_SETTINGS
+
+
+def on_admin_edit_contact_info(bot, update, user_data):
+    contact_info = update.message.text
+    config_session = get_config_session()
+    config_session['contact_info'] = contact_info
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Contact info was changed',
+                     reply_markup=create_bot_settings_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_BOT_SETTINGS
+
+
+def on_admin_bot_on_off(bot, update, user_data):
+    status = update.message.text
+    if status in ['ON', 'OFF']:
+        status = status == 'ON'
+        config_session = get_config_session()
+        config_session['bot_on_off'] = status
+        set_config_session(config_session)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Bot status was changed',
+                         reply_markup=create_bot_settings_keyboard(),
+                         parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_BOT_SETTINGS
+
+    update.message.reply_text(
+        text='Incorrect bot status, plz retype',
+        reply_markup=ReplyKeyboardRemove(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+    return ADMIN_BOT_ON_OFF

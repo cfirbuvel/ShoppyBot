@@ -17,7 +17,8 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_shipping_keyboard, create_cancel_keyboard, create_time_keyboard, \
     create_confirmation_keyboard, create_courier_confirmation_keyboard, \
     create_admin_keyboard, create_statistics_keyboard, \
-    create_bot_settings_keyboard
+    create_bot_settings_keyboard, create_bot_couriers_keyboard, \
+    create_bot_channels_keyboard
 from src.models import create_tables, User, Courier, Order, OrderItem, \
     Product, ProductCount
 
@@ -161,15 +162,13 @@ def make_unconfirm(bot, update, user_data):
 def on_start(bot, update, user_data):
     user_id = get_user_id(update)
     username = get_username(update)
-    user_data = get_user_session(user_id)
     try:
         user = User.get(telegram_id=user_id)
     except User.DoesNotExist:
         user = User(telegram_id=user_id, username=username)
         user.save()
-    config_session = get_config_session()
-    BOT_ON = config_session['bot_on_off'] if 'bot_on_off' in config_session else True
-    if BOT_ON:
+    BOT_ON = config.get_bot_on_off()
+    if BOT_ON or is_admin(bot, user_id):
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
             logger.info('Starting session for user %s, language: %s',
                         update.message.from_user.id,
@@ -205,9 +204,8 @@ def on_menu(bot, update, user_data=None):
     data = query.data
     user_id = get_user_id(update)
     user_data = get_user_session(user_id)
-    config_session = get_config_session()
-    BOT_ON = config_session['bot_on_off'] if 'bot_on_off' in config_session else True
-    if BOT_ON:
+    BOT_ON = config.get_bot_on_off()
+    if BOT_ON or is_admin(bot, user_id):
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
             if data == 'menu_products':
                 # the menu disappears
@@ -899,7 +897,6 @@ def on_settings_menu(bot, update):
 def on_statistics_menu(bot, update):
     query = update.callback_query
     data = query.data
-    user_id = get_user_id(update)
     if data == 'statistics_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1027,9 +1024,6 @@ def on_statistics_menu(bot, update):
 def on_bot_settings_menu(bot, update):
     query = update.callback_query
     data = query.data
-    user_id = get_user_id(update)
-    user_data = get_user_session(user_id)
-    config_session = get_config_session()
     if data == 'bot_settings_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1038,6 +1032,154 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_MENU
+    elif data == 'bot_settings_couriers':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Couriers',
+                              reply_markup=create_bot_couriers_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_COURIERS
+    elif data == 'bot_settings_channels':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Channels',
+                              reply_markup=create_bot_channels_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_CHANNELS
+    elif data == 'bot_settings_edit_working_hours':
+        msg = 'Now: {}'.format(config.get_working_hours())
+        msg += '\nType new working hours'
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_EDIT_WORKING_HOURS
+    elif data == 'bot_settings_edit_contact_info':
+        msg = 'Now: {}'.format(config.get_contact_info())
+        msg += '\nType new contact info'
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_EDIT_CONTACT_INFO
+    elif data == 'bot_settings_bot_on_off':
+        bot_status = config.get_bot_on_off()
+        bot_status = 'ON' if bot_status else 'OFF'
+        msg = 'Bot status: {}'.format(bot_status)
+        msg += '\nType "ON" or "OFF"'
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BOT_ON_OFF
+    elif data == 'bot_settings_reset_all_data':
+        set_config_session({})
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Config options were deleted',
+                              reply_markup=create_bot_settings_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BOT_SETTINGS
+
+    return ConversationHandler.END
+
+
+def on_admin_couriers(bot, update):
+    query = update.callback_query
+    data = query.data
+    if data == 'bot_couriers_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Bot settings',
+                              reply_markup=create_bot_settings_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BOT_SETTINGS
+    elif data == 'bot_couriers_view':
+        msg = ''
+        couriers = Courier.select()
+        for courier in couriers:
+            msg += '\nname: @{} id: {}, telegram id: {}, location: {}'.format(
+                courier.username, courier.id, courier.telegram_id,
+                courier.location.title)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_bot_couriers_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_COURIERS
+    elif data == 'bot_couriers_add':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Enter new courier nickname',
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_TXT_COURIER_NAME
+    elif data == 'bot_couriers_delete':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Choose courier ID to delete',
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_TXT_DELETE_COURIER
+
+    return ConversationHandler.END
+
+
+def on_admin_channels(bot, update):
+    query = update.callback_query
+    data = query.data
+    if data == 'bot_channels_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Bot settings',
+                              reply_markup=create_bot_settings_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BOT_SETTINGS
+    elif data == 'bot_channels_view':
+        msg = u'Reviews channel: {}'.format(config.get_reviews_channel())
+        msg += u'\nService channel: {}'.format(config.get_service_channel())
+        msg += u'\nCustomer channel: {}'.format(config.get_customers_channel())
+        msg += u'\nVip customer channel: {}'.format(
+            config.get_vip_customers_channel())
+        msg += u'\nCourier channel: {}'.format(config.get_couriers_channel())
+
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_bot_channels_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_CHANNELS
+    elif data == 'bot_channels_add':
+        types = ['Reviews', 'Service', 'Customer', 'Vip customer', 'Courier']
+        msg = ''
+        for i, channel_type in enumerate(types, start=1):
+            msg += '\n{} - {}'.format(i, channel_type)
+        msg += '\nSelect channel type'
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_CHANNELS_SELECT_TYPE
+    elif data == 'bot_channels_remove':
+        types = ['Reviews', 'Service', 'Customer', 'Vip customer', 'Courier']
+        msg = ''
+        for i, channel_type in enumerate(types, start=1):
+            msg += '\n{} - {}'.format(i, channel_type)
+        msg += '\nSelect channel type'
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_CHANNELS_REMOVE
+
     return ConversationHandler.END
 
 
@@ -1115,13 +1257,46 @@ def main():
             # admin states
             #
             ADMIN_MENU: [CallbackQueryHandler(
-                    on_settings_menu, pattern='^settings')],
+                on_settings_menu, pattern='^settings')],
             ADMIN_STATISTICS: [CallbackQueryHandler(
                 on_statistics_menu, pattern='^statistics')],
             ADMIN_BOT_SETTINGS: [CallbackQueryHandler(
                 on_bot_settings_menu, pattern='^bot_settings')],
+            ADMIN_COURIERS: [CallbackQueryHandler(
+                on_admin_couriers, pattern='^bot_couriers')],
+            ADMIN_CHANNELS: [CallbackQueryHandler(
+                on_admin_channels, pattern='^bot_channels')],
+            ADMIN_CHANNELS_SELECT_TYPE: [
+                MessageHandler(Filters.text, on_admin_select_channel_type,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
+            ADMIN_CHANNELS_ADDRESS: [
+                MessageHandler(Filters.text, on_admin_add_channel_address,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
+            ADMIN_CHANNELS_REMOVE: [
+                MessageHandler(Filters.text, on_admin_remove_channel,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
+            ADMIN_EDIT_WORKING_HOURS: [
+                MessageHandler(Filters.text, on_admin_edit_working_hours,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
+            ADMIN_EDIT_CONTACT_INFO: [
+                MessageHandler(Filters.text, on_admin_edit_contact_info,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
+            ADMIN_BOT_ON_OFF: [
+                MessageHandler(Filters.text, on_admin_bot_on_off,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
             ADMIN_INIT: [
-                CommandHandler('setconfig', on_admin_cmd_set_config),
                 CommandHandler('addproduct', on_admin_cmd_add_product),
                 CommandHandler('delproduct', on_admin_cmd_delete_product),
                 CommandHandler('addcourier', on_admin_cmd_add_courier),
@@ -1130,10 +1305,6 @@ def main():
                 CommandHandler('off', on_admin_cmd_bot_off),
                 CommandHandler('cancel', on_admin_cancel),
                 MessageHandler(Filters.all, on_admin_fallback),
-            ],
-            ADMIN_SET_WELCOME_MESSAGE: [
-                MessageHandler(Filters.text, new_welcome_message),
-                CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_TXT_PRODUCT_TITLE: [
                 MessageHandler(Filters.text, on_admin_txt_product_title,

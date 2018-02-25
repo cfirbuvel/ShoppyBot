@@ -43,86 +43,121 @@ class ConfigHelper:
         return value.strip()
 
     def get_reviews_channel(self):
-        value = self.config.get(self.section, 'reviews_channel')
+        value = get_config_session().get('reviews_channel')
+        if value is None:
+            value = self.config.get(self.section, 'reviews_channel')
         return value.strip()
 
     def get_service_channel(self):
-        value = self.config.get(self.section, 'service_channel')
+        value = get_config_session().get('service_channel')
+        if value is None:
+            value = self.config.get(self.section, 'service_channel')
         return value.strip()
 
     def get_customers_channel(self):
-        value = self.config.get(self.section, 'customers_channel')
+        value = get_config_session().get('customers_channel')
+        if value is None:
+            value = self.config.get(self.section, 'customers_channel')
         return value.strip()
 
     def get_vip_customers_channel(self):
-        value = self.config.get(self.section, 'vip_customers_channel')
+        value = get_config_session().get('vip_customers_channel')
+        if value is None:
+            value = self.config.get(self.section, 'vip_customers_channel')
         return value.strip()
 
     def get_couriers_channel(self):
-        value = self.config.get(self.section, 'couriers_channel')
+        value = get_config_session().get('couriers_channel')
+        if value is None:
+            value = self.config.get(self.section, 'couriers_channel')
         return value.strip()
 
     def get_welcome_text(self):
-        session = get_config_session()
-        session_value = None
-        if session.get('welcome_text'):
-            session_value = session.get('welcome_text')
-        value = session_value or self.config.get(self.section, 'welcome_text')
+        value = get_config_session().get('welcome_text')
+        if value is None:
+            value = self.config.get(self.section, 'welcome_text')
         return value.strip()
 
     def get_order_text(self):
-        value = self.config.get(self.section, 'order_text')
+        value = get_config_session().get('order_text')
+        if value is None:
+            value = self.config.get(self.section, 'order_text')
         return value.strip()
 
     def get_order_complete_text(self):
-        value = self.config.get(self.section, 'order_complete_text')
+        value = get_config_session().get('order_complete_text')
+        if value is None:
+            value = self.config.get(self.section, 'order_complete_text')
         return value.strip()
 
     def get_working_hours(self):
-        value = self.config.get(self.section, 'working_hours')
+        value = get_config_session().get('working_hours')
+        if value is None:
+            value = self.config.get(self.section, 'working_hours')
         return value.strip()
 
     def get_contact_info(self):
-        value = self.config.get(self.section, 'contact_info')
+        value = get_config_session().get('contact_info')
+        if value is None:
+            value = self.config.get(self.section, 'contact_info')
         return value.strip()
 
     def get_phone_number_required(self):
-        value = self.config.getboolean(self.section, 'phone_number_required')
+        value = get_config_session().get('phone_number_required')
+        if value is None:
+            value = self.config.getboolean(self.section, 'phone_number_required')
         return value
 
     def get_identification_required(self):
-        value = self.config.getboolean(self.section, 'identification_required')
+        value = get_config_session().get('identification_required')
+        if value is None:
+            value = self.config.getboolean(self.section,
+                                           'identification_required')
         return value
 
     def get_identification_stage2_required(self):
-        value = self.config.getboolean(self.section,
-                                       'identification_stage2_required')
+        value = get_config_session().get('identification_stage2_required')
+        if value is None:
+            value = self.config.getboolean(self.section,
+                                           'identification_stage2_required')
         return value
 
     def get_identification_stage2_question(self):
-        value = self.config.get(self.section, 'identification_stage2_question')
+        value = get_config_session().get('identification_stage2_question')
+        if value is None:
+            value = self.config.get(self.section,
+                                    'identification_stage2_question')
         return value
 
     def get_only_for_customers(self):
-        value = self.config.getboolean(self.section, 'only_for_customers')
+        value = get_config_session().get('only_for_customers')
+        if value is None:
+            value = self.config.getboolean(self.section, 'only_for_customers')
         return value
 
     def get_has_courier_option(self):
-        value = self.config.getboolean(self.section, 'has_courier_option')
+        value = get_config_session().get('has_courier_option')
+        if value is None:
+            value = self.config.getboolean(self.section, 'has_courier_option')
         return value
 
     def get_vip_customers(self):
-        value = self.config.getboolean(self.section, 'vip_customers')
+        value = get_config_session().get('vip_customers')
+        if value is None:
+            value = self.config.getboolean(self.section, 'vip_customers')
         return value
 
     def get_delivery_fee(self):
-        value = self.config.get(self.section, 'delivery_fee')
+        value = get_config_session().get('delivery_fee')
+        if value is None:
+            value = self.config.get(self.section, 'delivery_fee')
         return int(value.strip())
 
-    def get_default_settings(self, session):
-        if not session.get('welcome_text'):
-            session['welcome_text'] = self.get_welcome_text()
-        return session
+    def get_bot_on_off(self):
+        value = get_config_session().get('bot_on_off')
+        if value is None:
+            value = self.config.getboolean(self.section, 'bot_on_off')
+        return value
 
 
 class CartHelper:
@@ -316,6 +351,10 @@ def get_config_session():
         session = session_client.json_get('config')
 
     return session
+
+
+def set_config_session(session):
+    session_client.json_set('config', session)
 
 
 session_client = JsonRedis(host='localhost', port=6379, db=0)
