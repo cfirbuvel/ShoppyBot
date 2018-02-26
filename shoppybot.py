@@ -1105,9 +1105,10 @@ def on_admin_couriers(bot, update):
         msg = ''
         couriers = Courier.select()
         for courier in couriers:
+            location = '' if not courier.location else courier.location.title
             msg += '\nname: @{} id: {}, telegram id: {}, location: {}'.format(
                 courier.username, courier.id, courier.telegram_id,
-                courier.location.title)
+                location)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
