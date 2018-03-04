@@ -105,7 +105,10 @@ class ConfigHelper:
     def get_phone_number_required(self):
         value = get_config_session().get('phone_number_required')
         if value is None:
-            value = self.config.getboolean(self.section, 'phone_number_required')
+            value = self.config.getboolean(
+                self.section, 'phone_number_required')
+        else:
+            value = value == '1' or value == 'yes'
         return value
 
     def get_identification_required(self):
@@ -113,6 +116,8 @@ class ConfigHelper:
         if value is None:
             value = self.config.getboolean(self.section,
                                            'identification_required')
+        else:
+            value = value == '1' or value == 'yes'
         return value
 
     def get_identification_stage2_required(self):
@@ -120,6 +125,8 @@ class ConfigHelper:
         if value is None:
             value = self.config.getboolean(self.section,
                                            'identification_stage2_required')
+        else:
+            value = value == '1' or value == 'yes'
         return value
 
     def get_identification_stage2_question(self):
@@ -133,18 +140,24 @@ class ConfigHelper:
         value = get_config_session().get('only_for_customers')
         if value is None:
             value = self.config.getboolean(self.section, 'only_for_customers')
+        else:
+            value = value == '1' or value == 'yes'
         return value
 
     def get_has_courier_option(self):
         value = get_config_session().get('has_courier_option')
         if value is None:
             value = self.config.getboolean(self.section, 'has_courier_option')
+        else:
+            value = value == '1' or value == 'yes'
         return value
 
     def get_vip_customers(self):
         value = get_config_session().get('vip_customers')
         if value is None:
             value = self.config.getboolean(self.section, 'vip_customers')
+        else:
+            value = value == '1' or value == 'yes' or value is True
         return value
 
     def get_delivery_fee(self):
@@ -157,7 +170,26 @@ class ConfigHelper:
         value = get_config_session().get('bot_on_off')
         if value is None:
             value = self.config.getboolean(self.section, 'bot_on_off')
+        else:
+            value = value == '1' or value == 'yes' or value is True
         return value
+
+    def get_discount(self):
+        value = get_config_session().get('discount')
+        if value is None:
+            value = self.config.get(self.section, 'discount')
+        return value
+
+    def get_banned_users(self):
+        value = get_config_session().get('banned')
+        if value is None:
+            value = self.config.get(self.section, 'banned')
+        values = value
+        if not value:
+            values = []
+        elif isinstance(value, str):
+            values = value.split(', ')
+        return values
 
 
 class CartHelper:

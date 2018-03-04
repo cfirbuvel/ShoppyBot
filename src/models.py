@@ -32,6 +32,11 @@ class Courier(User):
     location = ForeignKeyField(Location, null=True)
 
 
+class CourierLocation(BaseModel):
+    location = ForeignKeyField(Location)
+    courier = ForeignKeyField(Courier)
+
+
 class Product(BaseModel):
     title = CharField()
     image = BlobField(null=True)
@@ -64,7 +69,9 @@ class OrderItem(BaseModel):
 
 def create_tables():
     db.connect()
-    db.create_tables([
-        Location, User, Courier, Product, ProductCount, Order, OrderItem],
-        safe=True
+    db.create_tables(
+        [
+            Location, CourierLocation, User, Courier, Product, ProductCount,
+            Order, OrderItem
+        ], safe=True
     )

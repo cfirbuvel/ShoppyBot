@@ -18,7 +18,8 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_confirmation_keyboard, create_courier_confirmation_keyboard, \
     create_admin_keyboard, create_statistics_keyboard, \
     create_bot_settings_keyboard, create_bot_couriers_keyboard, \
-    create_bot_channels_keyboard
+    create_bot_channels_keyboard, create_bot_order_options_keyboard, \
+    create_back_button, create_on_off_buttons, create_ban_list_keyboard
 from src.models import create_tables, User, Courier, Order, OrderItem, \
     Product, ProductCount
 
@@ -167,7 +168,7 @@ def on_start(bot, update, user_data):
     except User.DoesNotExist:
         user = User(telegram_id=user_id, username=username)
         user.save()
-    BOT_ON = config.get_bot_on_off()
+    BOT_ON = config.get_bot_on_off() and username not in config.get_banned_users()
     if BOT_ON or is_admin(bot, user_id):
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
             logger.info('Starting session for user %s, language: %s',
@@ -810,34 +811,40 @@ def service_channel_courier_query_handler(bot, update, user_data):
         try:
             courier = Courier.get(telegram_id=courier_id)
         except Courier.DoesNotExist:
-            courier = Courier.create(
-                telegram_id=courier_id, username=courier_nickname)
-        if courier.location == order.location:
-            order.courier = courier
-            order.save()
-            bot.delete_message(config.get_couriers_channel(),
-                               message_id=query.message.message_id)
-            bot.send_message(config.get_couriers_channel(),
-                             text=query.message.text, parse_mode=ParseMode.HTML,
-                             reply_markup=create_drop_responsibility_keyboard(
-                                 user_id, courier_nickname, order_id),
-                             )
-            bot.send_message(config.get_service_channel(),
-                             text='Courier: {}, apply for order №{}. '
-                                  'Confirm this?'.format(
-                                 courier_nickname, order_id),
-                             reply_markup=create_courier_confirmation_keyboard(
-                                 order_id, courier_nickname),
-                             )
-            bot.answer_callback_query(
-                query.id,
-                text=_('Courier {} assigned').format(courier_nickname))
+            pass
+
         else:
-            bot.send_message(config.get_couriers_channel(),
-                             text='{} your location and customer locations are '
-                                  'different'.format(courier_nickname),
-                             parse_mode=ParseMode.HTML
-                             )
+            try:
+                CourierLocation.get(courier=courier, location=order.location)
+                order.courier = courier
+                order.save()
+                bot.delete_message(config.get_couriers_channel(),
+                                   message_id=query.message.message_id)
+                bot.send_message(
+                    config.get_couriers_channel(),
+                    text=query.message.text,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=create_drop_responsibility_keyboard(
+                        user_id, courier_nickname, order_id),
+                )
+                bot.send_message(
+                    config.get_service_channel(),
+                    text='Courier: {}, apply for order №{}. '
+                         'Confirm this?'.format(
+                        courier_nickname, order_id),
+                    reply_markup=create_courier_confirmation_keyboard(
+                        order_id, courier_nickname),
+                )
+                bot.answer_callback_query(
+                    query.id,
+                    text=_('Courier {} assigned').format(courier_nickname))
+            except CourierLocation.DoesNotExist:
+                bot.send_message(
+                    config.get_couriers_channel(),
+                    text='{} your location and customer locations are '
+                         'different'.format(courier_nickname),
+                    parse_mode=ParseMode.HTML
+                                 )
 
 
 def send_welcome_message(bot, update):
@@ -1048,21 +1055,39 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_CHANNELS
+    elif data == 'bot_settings_order_options':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Order options',
+                              reply_markup=create_bot_order_options_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_ORDER_OPTIONS
     elif data == 'bot_settings_edit_working_hours':
         msg = 'Now: {}'.format(config.get_working_hours())
         msg += '\nType new working hours'
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
+                              reply_markup=create_back_button(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_EDIT_WORKING_HOURS
+    elif data == 'bot_settings_ban_list':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Ban list',
+                              reply_markup=create_ban_list_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BAN_LIST
     elif data == 'bot_settings_edit_contact_info':
         msg = 'Now: {}'.format(config.get_contact_info())
         msg += '\nType new contact info'
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
+                              reply_markup=create_back_button(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_EDIT_CONTACT_INFO
@@ -1070,10 +1095,10 @@ def on_bot_settings_menu(bot, update):
         bot_status = config.get_bot_on_off()
         bot_status = 'ON' if bot_status else 'OFF'
         msg = 'Bot status: {}'.format(bot_status)
-        msg += '\nType "ON" or "OFF"'
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
+                              reply_markup=create_on_off_buttons(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_BOT_ON_OFF
@@ -1105,10 +1130,11 @@ def on_admin_couriers(bot, update):
         msg = ''
         couriers = Courier.select()
         for courier in couriers:
-            location = '' if not courier.location else courier.location.title
+            locations = CourierLocation.filter(courier=courier)
+            locations = [item.location.title for item in locations]
             msg += '\nname: @{} id: {}, telegram id: {}, location: {}'.format(
                 courier.username, courier.id, courier.telegram_id,
-                location)
+                locations)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1180,6 +1206,49 @@ def on_admin_channels(bot, update):
                               text=msg,
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_CHANNELS_REMOVE
+
+    return ConversationHandler.END
+
+
+def on_admin_ban_list(bot, update):
+    query = update.callback_query
+    data = query.data
+    if data == 'bot_ban_list_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Bot settings',
+                              reply_markup=create_bot_settings_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BOT_SETTINGS
+    elif data == 'bot_ban_list_view':
+        banned = config.get_banned_users()
+        banned = ['@{}'.format(ban) for ban in banned]
+        msg = ', '.join(banned)
+        msg = 'Banned users: {}'.format(msg)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_ban_list_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BAN_LIST
+    elif data == 'bot_ban_list_remove':
+        msg = 'Type username: @username or username'
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_back_button(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_BAN_LIST_REMOVE
+    elif data == 'bot_ban_list_add':
+        msg = 'Type username: @username or username'
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_back_button(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_BAN_LIST_ADD
 
     return ConversationHandler.END
 
@@ -1265,8 +1334,9 @@ def main():
                 on_bot_settings_menu, pattern='^bot_settings')],
             ADMIN_COURIERS: [CallbackQueryHandler(
                 on_admin_couriers, pattern='^bot_couriers')],
-            ADMIN_CHANNELS: [CallbackQueryHandler(
-                on_admin_channels, pattern='^bot_channels')],
+            ADMIN_CHANNELS: [
+                CallbackQueryHandler(on_admin_channels, pattern='^bot_channels')
+            ],
             ADMIN_CHANNELS_SELECT_TYPE: [
                 MessageHandler(Filters.text, on_admin_select_channel_type,
                                pass_user_data=True),
@@ -1282,20 +1352,94 @@ def main():
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel)
             ],
+            ADMIN_BAN_LIST: [
+                CallbackQueryHandler(on_admin_ban_list, pattern='^bot_ban_list')
+            ],
+            ADMIN_BAN_LIST_REMOVE: [
+                CallbackQueryHandler(
+                    on_admin_remove_ban_list, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_remove_ban_list,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
+            ADMIN_BAN_LIST_ADD: [
+                CallbackQueryHandler(
+                    on_admin_add_ban_list, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_add_ban_list,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel)
+            ],
             ADMIN_EDIT_WORKING_HOURS: [
+                CallbackQueryHandler(
+                    on_admin_edit_working_hours, pass_user_data=True),
                 MessageHandler(Filters.text, on_admin_edit_working_hours,
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel)
             ],
             ADMIN_EDIT_CONTACT_INFO: [
+                CallbackQueryHandler(
+                    on_admin_edit_contact_info, pass_user_data=True),
                 MessageHandler(Filters.text, on_admin_edit_contact_info,
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel)
             ],
             ADMIN_BOT_ON_OFF: [
-                MessageHandler(Filters.text, on_admin_bot_on_off,
-                               pass_user_data=True),
+                CallbackQueryHandler(
+                    on_admin_bot_on_off, pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel)
+            ],
+            ADMIN_ORDER_OPTIONS: [
+                CallbackQueryHandler(
+                    on_admin_order_options, pattern='^bot_order_options')
+            ],
+            ADMIN_ADD_DISCOUNT: [
+                CallbackQueryHandler(
+                    on_admin_add_discount, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_add_discount,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_EDIT_IDENTIFICATION: [
+                CallbackQueryHandler(
+                    on_admin_edit_identification, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_edit_identification,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_EDIT_RESTRICTION: [
+                CallbackQueryHandler(
+                    on_admin_edit_restriction, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_edit_restriction,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_ADD_DELIVERY_FEE: [
+                CallbackQueryHandler(
+                    on_admin_add_delivery, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_add_delivery,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_EDIT_WELCOME_MESSAGE: [
+                CallbackQueryHandler(
+                    on_admin_edit_welcome_message, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_edit_welcome_message,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_EDIT_ORDER_DETAILS: [
+                CallbackQueryHandler(
+                    on_admin_edit_order_message, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_edit_order_message,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_EDIT_FINAL_MESSAGE: [
+                CallbackQueryHandler(
+                    on_admin_edit_final_message, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_edit_final_message,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_INIT: [
                 CommandHandler('addproduct', on_admin_cmd_add_product),
@@ -1308,6 +1452,8 @@ def main():
                 MessageHandler(Filters.all, on_admin_fallback),
             ],
             ADMIN_TXT_PRODUCT_TITLE: [
+                CallbackQueryHandler(
+                    on_admin_txt_product_title, pass_user_data=True),
                 MessageHandler(Filters.text, on_admin_txt_product_title,
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel),

@@ -243,3 +243,57 @@ def create_bot_channels_keyboard():
     ]
 
     return InlineKeyboardMarkup(main_button_list)
+
+
+def create_bot_order_options_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('➕️ Add new product'),
+                              callback_data='bot_order_options_product')],
+        [InlineKeyboardButton(_('➕ Add discount'),
+                              callback_data='bot_order_options_discount')],
+        [InlineKeyboardButton(_('➕ Add delivery fee'),
+                              callback_data='bot_order_options_delivery_fee')],
+        [InlineKeyboardButton(_('👨‍ Edit identify process'),
+                              callback_data='bot_order_options_identify')],
+        [InlineKeyboardButton(_('🔥 Edit Restricted area'),
+                              callback_data='bot_order_options_restricted')],
+        [InlineKeyboardButton(_('✉ Edit Welcome message'),
+                              callback_data='bot_order_options_welcome')],
+        [InlineKeyboardButton(_('✉ Edit Order details message'),
+                              callback_data='bot_order_options_details')],
+        [InlineKeyboardButton(_('✉ Edit Final message'),
+                              callback_data='bot_order_options_final')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='bot_order_options_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)
+
+
+def create_back_button():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(BUTTON_TEXT_CANCEL, callback_data='back')]
+    ])
+
+
+def create_on_off_buttons():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton('ON', callback_data='on')],
+        [InlineKeyboardButton('OFF', callback_data='off')],
+        [InlineKeyboardButton(BUTTON_TEXT_CANCEL, callback_data='back')],
+    ])
+
+
+def create_ban_list_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('🔥 View ban list'),
+                              callback_data='bot_ban_list_view')],
+        [InlineKeyboardButton(_('➖ Remove from ban list'),
+                              callback_data='bot_ban_list_remove')],
+        [InlineKeyboardButton(_('➕ Add to ban list'),
+                              callback_data='bot_ban_list_add')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='bot_ban_list_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)

@@ -5,14 +5,16 @@ import sys
 from telegram import ParseMode, Message, CallbackQuery
 from telegram import ReplyKeyboardRemove
 from telegram.error import TelegramError
+from telegram.ext import ConversationHandler
 
 from .enums import *
 from .helpers import ConfigHelper, session_client, get_config_session, \
     get_user_session, get_user_id, set_config_session
-from .models import Product, ProductCount, Courier, Location, User
-from .keyboards import create_bot_config_keyboard, \
+from .models import Product, ProductCount, Courier, Location, CourierLocation
+from .keyboards import create_bot_config_keyboard, create_back_button, \
     create_bot_couriers_keyboard, create_bot_channels_keyboard, \
-    create_bot_settings_keyboard
+    create_bot_settings_keyboard, create_bot_order_options_keyboard, \
+    create_ban_list_keyboard
 
 DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
@@ -65,7 +67,125 @@ def on_admin_cmd_add_product(bot, update):
     return ADMIN_TXT_PRODUCT_TITLE
 
 
+def on_admin_order_options(bot, update):
+    query = update.callback_query
+    data = query.data
+    if data == 'bot_order_options_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Bot settings',
+                              reply_markup=create_bot_settings_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_BOT_SETTINGS
+    elif data == 'bot_order_options_product':
+        bot.edit_message_text(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+            text='Enter new product title',
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=create_back_button(),
+        )
+        return ADMIN_TXT_PRODUCT_TITLE
+    elif data == 'bot_order_options_discount':
+        bot.edit_message_text(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+            text=('Enter discount like:\n'
+                  '50 > 500: all deals above 500$ will be -100$\n'
+                  '10% > 500: all deals above 500% will be -10%\n'
+                  'Current discount: {}'.format(config.get_discount())),
+            reply_markup=create_back_button(),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        query.answer()
+        return ADMIN_ADD_DISCOUNT
+    elif data == 'bot_order_options_delivery_fee':
+        bot.edit_message_text(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+            text=('Enter delivery fee like:\n'
+                  '50 > 500: all deals above 500$ no fee\n'
+                  'if 0: all the deals have no fee\n'
+                  'Current fee: {}'.format(config.get_delivery_fee())),
+            reply_markup=create_back_button(),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        query.answer()
+        return ADMIN_ADD_DELIVERY_FEE
+    elif data == 'bot_order_options_identify':
+        first = config.get_identification_required()
+        second = config.get_identification_stage2_required()
+        question = config.get_identification_stage2_question()
+        first = 'Enabled' if first else 'Disabled'
+        second = 'Enabled' if second else 'Disabled'
+        msg = 'First stage: {}\n' \
+              'Second stage: {}\n' \
+              'Identification question:{}\n' \
+              'Enter like this: 0/1 0/1 text (first, second, question)' \
+              ''.format(first, second, question)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_back_button(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_EDIT_IDENTIFICATION
+    elif data == 'bot_order_options_restricted':
+        only_for_customers = 'Enabled' if config.get_only_for_customers() \
+            else 'Disabled'
+        only_for_vip_customers = 'Enabled' if config.get_vip_customers() \
+            else 'Disabled'
+        msg = 'Only for customers option: {}\n' \
+              'Vip customers option: {}\n' \
+              'Type new rules: 0/1 0/1 (customers, vip customers)'.format(
+                only_for_customers, only_for_vip_customers)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_back_button(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_EDIT_RESTRICTION
+    elif data == 'bot_order_options_welcome':
+        msg = 'Type new welcome message.\n' \
+              'Current message: {}'.format(config.get_welcome_text())
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_back_button(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_EDIT_WELCOME_MESSAGE
+    elif data == 'bot_order_options_details':
+        msg = 'Type new order details message.\n' \
+              'Current message: {}'.format(config.get_order_text())
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_back_button(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_EDIT_ORDER_DETAILS
+    elif data == 'bot_order_options_final':
+        msg = 'Type new final message.\n' \
+              'Current message: {}'.format(config.get_order_complete_text())
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_back_button(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_EDIT_FINAL_MESSAGE
+
+    return ConversationHandler.END
+
+
 def on_admin_txt_product_title(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        query = update.callback_query
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Order options',
+                              reply_markup=create_bot_order_options_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_ORDER_OPTIONS
+
     title = update.message.text
     # initialize new product data
     user_data['add_product'] = {}
@@ -118,10 +238,11 @@ def on_admin_txt_product_photo(bot, update, user_data):
     # clear new product data
     del user_data['add_product']
 
-    update.message.reply_text(
-        text='Product created, type /cancel to leave admin mode')
-    logger.info("Product created: %s", title)
-    return ADMIN_INIT
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Product created',
+                     reply_markup=create_bot_settings_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
 
 
 def on_admin_cmd_delete_product(bot, update):
@@ -200,7 +321,8 @@ def on_admin_txt_courier_id(bot, update, user_data):
     telegram_id = update.message.text
     user_data['add_courier']['telegram_id'] = telegram_id
 
-    text = 'Enter location ID for this courier (choose number from list below):'
+    text = 'Enter location ID for this courier (choose number or list of ' \
+           'numbers from list below, example: 1 or 1, 2):'
 
     for location in Location:
         text += '\n'
@@ -211,24 +333,20 @@ def on_admin_txt_courier_id(bot, update, user_data):
 
 
 def on_admin_txt_courier_location(bot, update, user_data):
-    location_id = update.message.text
-    user_data['add_courier']['location_id'] = location_id
+    location_ids = update.message.text.split(', ')
+    user_data['add_courier']['location_ids'] = location_ids
     username = user_data['add_courier']['name']
     telegram_id = user_data['add_courier']['telegram_id']
     # check that location name is valid
-    try:
-        location = Location.get(id=location_id)
-    except Location.DoesNotExist:
-        update.message.reply_text(
-            text='Invalid location id, please enter number')
-        return ADMIN_TXT_COURIER_LOCATION
+    locations = Location.filter(id__in=location_ids)
     try:
         Courier.get(username=username, telegram_id=telegram_id)
         update.message.reply_text(text='Courier with username @{} '
                                        'already added'.format(username))
     except Courier.DoesNotExist:
-        Courier.create(username=username, location=location,
-                       telegram_id=telegram_id)
+        courier = Courier.create(username=username, telegram_id=telegram_id)
+        for location in locations:
+            CourierLocation.create(courier=courier, location=location)
         # clear new courier data
         del user_data['add_courier']
         bot.send_message(chat_id=update.message.chat_id,
@@ -364,6 +482,12 @@ def on_admin_remove_channel(bot, update, user_data):
 
 
 def on_admin_edit_working_hours(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_settings_keyboard,
+            'Bot settings')
+        return ADMIN_BOT_SETTINGS
+
     new_working_hours = update.message.text
     config_session = get_config_session()
     config_session['working_hours'] = new_working_hours
@@ -376,6 +500,12 @@ def on_admin_edit_working_hours(bot, update, user_data):
 
 
 def on_admin_edit_contact_info(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_settings_keyboard,
+            'Bot settings')
+        return ADMIN_BOT_SETTINGS
+
     contact_info = update.message.text
     config_session = get_config_session()
     config_session['contact_info'] = contact_info
@@ -387,22 +517,206 @@ def on_admin_edit_contact_info(bot, update, user_data):
     return ADMIN_BOT_SETTINGS
 
 
+def on_admin_add_discount(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_order_options_keyboard,
+            'Order options')
+        return ADMIN_ORDER_OPTIONS
+
+    discount = update.message.text
+    config_session = get_config_session()
+    config_session['discount'] = discount
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Discount was changed',
+                     reply_markup=create_bot_order_options_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
+
+
+def on_admin_add_delivery(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_order_options_keyboard,
+            'Order options')
+        return ADMIN_ORDER_OPTIONS
+
+    delivery_fee = update.message.text
+    config_session = get_config_session()
+    config_session['delivery_fee'] = delivery_fee
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Delivery fee was changed',
+                     reply_markup=create_bot_order_options_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
+
+
 def on_admin_bot_on_off(bot, update, user_data):
-    status = update.message.text
-    if status in ['ON', 'OFF']:
-        status = status == 'ON'
-        config_session = get_config_session()
-        config_session['bot_on_off'] = status
-        set_config_session(config_session)
-        bot.send_message(chat_id=update.message.chat_id,
-                         text='Bot status was changed',
-                         reply_markup=create_bot_settings_keyboard(),
-                         parse_mode=ParseMode.MARKDOWN)
+    query = update.callback_query
+    if query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_settings_keyboard,
+            'Bot settings')
         return ADMIN_BOT_SETTINGS
 
-    update.message.reply_text(
-        text='Incorrect bot status, plz retype',
-        reply_markup=ReplyKeyboardRemove(),
-        parse_mode=ParseMode.MARKDOWN,
-    )
-    return ADMIN_BOT_ON_OFF
+    status = query.data == 'on'
+    config_session = get_config_session()
+    config_session['bot_on_off'] = status
+    set_config_session(config_session)
+    bot.send_message(chat_id=query.message.chat_id,
+                     message_id=query.message.chat_id,
+                     text='Bot status was changed',
+                     reply_markup=create_bot_settings_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_BOT_SETTINGS
+
+
+def option_back_function(bot, update, return_fnc, return_title):
+    query = update.callback_query
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=return_title,
+                          reply_markup=return_fnc(),
+                          parse_mode=ParseMode.MARKDOWN)
+
+
+def on_admin_edit_welcome_message(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_order_options_keyboard,
+            'Order options')
+        return ADMIN_ORDER_OPTIONS
+
+    welcome_message = update.message.text
+    config_session = get_config_session()
+    config_session['welcome_text'] = welcome_message
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Welcome message fee was changed',
+                     reply_markup=create_bot_order_options_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
+
+
+def on_admin_edit_order_message(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_order_options_keyboard,
+            'Order options')
+        return ADMIN_ORDER_OPTIONS
+
+    order_message = update.message.text
+    config_session = get_config_session()
+    config_session['order_text'] = order_message
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Order message was changed',
+                     reply_markup=create_bot_order_options_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
+
+
+def on_admin_edit_final_message(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_order_options_keyboard,
+            'Order options')
+        return ADMIN_ORDER_OPTIONS
+
+    final_message = update.message.text
+    config_session = get_config_session()
+    config_session['order_complete_text'] = final_message
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Final message was changed',
+                     reply_markup=create_bot_order_options_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
+
+
+def on_admin_edit_identification(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_order_options_keyboard,
+            'Order options')
+        return ADMIN_ORDER_OPTIONS
+
+    message = update.message.text.split(maxsplit=2)
+    first, second, question = message
+
+    config_session = get_config_session()
+    config_session['identification_required'] = first
+    config_session['identification_stage2_required'] = second
+    config_session['identification_stage2_question'] = question
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Identification was changed',
+                     reply_markup=create_bot_order_options_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
+
+
+def on_admin_edit_restriction(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_bot_order_options_keyboard,
+            'Order options')
+        return ADMIN_ORDER_OPTIONS
+
+    message = update.message.text.split(maxsplit=1)
+    first, second = message
+
+    config_session = get_config_session()
+    config_session['only_for_customers'] = first
+    config_session['vip_customers'] = second
+    set_config_session(config_session)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Restriction options ware changed',
+                     reply_markup=create_bot_order_options_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_ORDER_OPTIONS
+
+
+def on_admin_add_ban_list(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_ban_list_keyboard,
+            'Ban list')
+        return ADMIN_BAN_LIST
+
+    username = update.message.text.replace('@', '').replace(' ', '')
+    banned = config.get_banned_users()
+    if username not in banned:
+        banned.append(username)
+    config_session = get_config_session()
+    config_session['banned'] = banned
+    set_config_session(config_session)
+
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='@{} was banned'.format(username),
+                     reply_markup=create_ban_list_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_BAN_LIST
+
+
+def on_admin_remove_ban_list(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        option_back_function(
+            bot, update, create_ban_list_keyboard,
+            'Ban list')
+        return ADMIN_BAN_LIST
+
+    username = update.message.text.replace('@', '').replace(' ', '')
+    banned = config.get_banned_users()
+    banned = [ban for ban in banned if ban != username]
+    config_session = get_config_session()
+    config_session['banned'] = banned
+    set_config_session(config_session)
+
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='@{} was unbanned'.format(username),
+                     reply_markup=create_ban_list_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_BAN_LIST
