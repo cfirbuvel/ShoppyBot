@@ -1469,7 +1469,10 @@ def main():
                 CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_TXT_DELETE_PRODUCT: [
-                MessageHandler(Filters.text, on_admin_txt_delete_product),
+                CallbackQueryHandler(
+                    on_admin_txt_delete_product, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_txt_delete_product,
+                               pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_TXT_COURIER_NAME: [

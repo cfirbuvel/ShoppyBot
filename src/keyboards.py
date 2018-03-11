@@ -249,6 +249,8 @@ def create_bot_order_options_keyboard():
     main_button_list = [
         [InlineKeyboardButton(_('➕️ Add new product'),
                               callback_data='bot_order_options_product')],
+        [InlineKeyboardButton(_('➖️ Delete product'),
+                              callback_data='bot_order_options_delete_product')],
         [InlineKeyboardButton(_('➕ Add discount'),
                               callback_data='bot_order_options_discount')],
         [InlineKeyboardButton(_('➕ Add delivery fee'),

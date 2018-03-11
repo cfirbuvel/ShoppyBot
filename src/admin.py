@@ -87,6 +87,29 @@ def on_admin_order_options(bot, update):
             reply_markup=create_back_button(),
         )
         return ADMIN_TXT_PRODUCT_TITLE
+    elif data == 'bot_order_options_delete_product':
+        products = Product.select()
+        if products.count() == 0:
+            query = update.callback_query
+            bot.edit_message_text(chat_id=query.message.chat_id,
+                                  message_id=query.message.message_id,
+                                  text='No products to delete',
+                                  reply_markup=create_bot_order_options_keyboard(),
+                                  parse_mode=ParseMode.MARKDOWN)
+            return ADMIN_ORDER_OPTIONS
+        else:
+            text = 'Choose product ID to delete:'
+            for product in products:
+                text += '\n'
+                text += '{}. {}'.format(product.id, product.title)
+        bot.edit_message_text(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+            text=text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=create_back_button(),
+        )
+        return ADMIN_TXT_DELETE_PRODUCT
     elif data == 'bot_order_options_discount':
         bot.edit_message_text(
             chat_id=query.message.chat_id,
@@ -289,7 +312,15 @@ def on_admin_cmd_delete_courier(bot, update):
     return ADMIN_TXT_DELETE_COURIER
 
 
-def on_admin_txt_delete_product(bot, update):
+def on_admin_txt_delete_product(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        query = update.callback_query
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Order options',
+                              reply_markup=create_bot_order_options_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_ORDER_OPTIONS
     product_id = update.message.text
     try:
         # get title to check if product is valid
@@ -297,9 +328,14 @@ def on_admin_txt_delete_product(bot, update):
         product_title = product.title
         product.delete_instance()
         update.message.reply_text(
-            text='Product {} - {} is deleted'.format(product_id, product_title))
-        logger.info('Product %s - %s is deleted', product_id, product_title)
-        return ADMIN_INIT
+            text='Product {} - {} was deleted'.format(product_id, product_title))
+        logger.info('Product %s - %s was deleted', product_id, product_title)
+        update.message.reply_text(
+            text='Order options',
+            reply_markup=create_bot_order_options_keyboard(),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        return ADMIN_ORDER_OPTIONS
     except Product.DoesNotExist:
         update.message.reply_text(
             text='Invalid product id, please enter number')
