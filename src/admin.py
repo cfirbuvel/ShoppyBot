@@ -263,7 +263,7 @@ def on_admin_txt_product_photo(bot, update, user_data):
 
     bot.send_message(chat_id=update.message.chat_id,
                      text='Product created',
-                     reply_markup=create_bot_settings_keyboard(),
+                     reply_markup=create_bot_order_options_keyboard(),
                      parse_mode=ParseMode.MARKDOWN)
     return ADMIN_ORDER_OPTIONS
 
