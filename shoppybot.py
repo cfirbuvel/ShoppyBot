@@ -216,7 +216,7 @@ def on_menu(bot, update, user_data=None):
                                       parse_mode=ParseMode.MARKDOWN, )
 
                 # send_products to current chat
-                for product in Product.select():
+                for product in Product.filter(is_active=True):
                     product_count = cart.get_product_count(
                         user_data, product.id)
                     subtotal = cart.get_product_subtotal(
