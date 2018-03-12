@@ -240,8 +240,7 @@ def on_menu(bot, update, user_data=None):
 
                 # send menu again as a new message
                 bot.send_message(query.message.chat_id,
-                                 text=config.get_order_text().format(
-                                     _('#Our_Species:')),
+                                 text=config.get_order_text(),
                                  reply_markup=create_main_keyboard(
                                      config.get_reviews_channel(),
                                      is_admin(bot, user_id)),
