@@ -40,6 +40,7 @@ class CourierLocation(BaseModel):
 class Product(BaseModel):
     title = CharField()
     image = BlobField(null=True)
+    is_active = BooleanField(default=True)
 
 
 class ProductCount(BaseModel):

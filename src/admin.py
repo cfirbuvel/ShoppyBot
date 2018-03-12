@@ -88,7 +88,7 @@ def on_admin_order_options(bot, update):
         )
         return ADMIN_TXT_PRODUCT_TITLE
     elif data == 'bot_order_options_delete_product':
-        products = Product.select()
+        products = Product.filter(is_active=True)
         if products.count() == 0:
             query = update.callback_query
             bot.edit_message_text(chat_id=query.message.chat_id,
@@ -269,7 +269,7 @@ def on_admin_txt_product_photo(bot, update, user_data):
 
 
 def on_admin_cmd_delete_product(bot, update):
-    products = Product.select()
+    products = Product.filter(is_active=True)
     if products.count() == 0:
         update.message.reply_text(text='No products to delete')
         return ADMIN_INIT
@@ -326,7 +326,8 @@ def on_admin_txt_delete_product(bot, update, user_data):
         # get title to check if product is valid
         product = Product.get(id=product_id)
         product_title = product.title
-        product.delete_instance()
+        product.is_active = False
+        product.save()
         update.message.reply_text(
             text='Product {} - {} was deleted'.format(product_id, product_title))
         logger.info('Product %s - %s was deleted', product_id, product_title)
