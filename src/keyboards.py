@@ -105,11 +105,11 @@ def create_drop_responsibility_keyboard(user_id, courier_nickname, order_id):
     return InlineKeyboardMarkup(buttons)
 
 
-def create_main_keyboard(review_channel, is_admin=None):
+def create_main_keyboard(review_channel, is_admin=None, total_price=0):
     main_button_list = [
         [InlineKeyboardButton(_('🏪 Our products'),
                               callback_data='menu_products')],
-        [InlineKeyboardButton(_('🛍 Checkout'),
+        [InlineKeyboardButton(_('🛍 Checkout {}'.format(total_price)),
                               callback_data='menu_order')],
         [InlineKeyboardButton(_('⭐ Reviews'), url=review_channel)],
         [InlineKeyboardButton(_('⏰ Working hours'),
@@ -297,5 +297,33 @@ def create_ban_list_keyboard():
         [InlineKeyboardButton(_('↩ Back'),
                               callback_data='bot_ban_list_back')],
     ]
+
+    return InlineKeyboardMarkup(main_button_list)
+
+
+def create_courier_locations_keyboard(locations):
+    main_button_list = []
+    for location_name, location_id, is_picked in locations:
+        if is_picked:
+            is_picked = '➖'
+        else:
+            is_picked = '➕'
+
+        location_callback = location_id
+        location_name = '{} {}'.format(is_picked, location_name)
+        main_button_list.append(
+            [
+                InlineKeyboardButton(
+                    location_name,
+                    callback_data=location_callback)
+            ]
+        )
+    main_button_list.append(
+        [
+            InlineKeyboardButton(
+                _('Done'),
+                callback_data='location_end')
+        ]
+    )
 
     return InlineKeyboardMarkup(main_button_list)

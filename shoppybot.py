@@ -171,6 +171,7 @@ def on_start(bot, update, user_data):
     BOT_ON = config.get_bot_on_off() and username not in config.get_banned_users()
     if BOT_ON or is_admin(bot, user_id):
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
+            total = cart.get_cart_total(get_user_session(user_id))
             logger.info('Starting session for user %s, language: %s',
                         update.message.from_user.id,
                         update.message.from_user.language_code)
@@ -178,7 +179,8 @@ def on_start(bot, update, user_data):
                 text=config.get_welcome_text().format(
                     update.message.from_user.first_name),
                 reply_markup=create_main_keyboard(config.get_reviews_channel(),
-                                                  is_admin(bot, user_id)),
+                                                  is_admin(bot, user_id),
+                                                  total),
             )
             return BOT_STATE_INIT
         else:
@@ -206,6 +208,7 @@ def on_menu(bot, update, user_data=None):
     user_id = get_user_id(update)
     user_data = get_user_session(user_id)
     BOT_ON = config.get_bot_on_off()
+    total = cart.get_cart_total(get_user_session(user_id))
     if BOT_ON or is_admin(bot, user_id):
         if is_customer(bot, user_id) or is_vip_customer(bot, user_id):
             if data == 'menu_products':
@@ -243,7 +246,7 @@ def on_menu(bot, update, user_data=None):
                                  text=config.get_order_text(),
                                  reply_markup=create_main_keyboard(
                                      config.get_reviews_channel(),
-                                     is_admin(bot, user_id)),
+                                     is_admin(bot, user_id), total),
                                  parse_mode=ParseMode.HTML, )
             elif data == 'menu_order':
                 if cart.is_full(user_data):
@@ -268,7 +271,7 @@ def on_menu(bot, update, user_data=None):
                                       text=config.get_working_hours(),
                                       reply_markup=create_main_keyboard(
                                           config.get_reviews_channel(),
-                                          is_admin(bot, user_id)),
+                                          is_admin(bot, user_id), total),
                                       parse_mode=ParseMode.MARKDOWN, )
             elif data == 'menu_contact':
                 bot.edit_message_text(chat_id=query.message.chat_id,
@@ -276,7 +279,7 @@ def on_menu(bot, update, user_data=None):
                                       text=config.get_contact_info(),
                                       reply_markup=create_main_keyboard(
                                           config.get_reviews_channel(),
-                                          is_admin(bot, user_id)),
+                                          is_admin(bot, user_id), total),
                                       parse_mode=ParseMode.MARKDOWN, )
             elif data.startswith('product_add'):
                 product_id = int(data.split('|')[1])
@@ -457,6 +460,7 @@ def enter_state_order_confirm(bot, update, user_data):
 
 def enter_state_init_order_confirmed(bot, update, user_data):
     user_id = get_user_id(update)
+    total = cart.get_cart_total(get_user_session(user_id))
     bot.send_message(
         update.message.chat_id,
         text=config.get_order_complete_text().format(
@@ -467,7 +471,7 @@ def enter_state_init_order_confirmed(bot, update, user_data):
         update.message.chat_id,
         text='〰〰〰〰〰〰〰〰〰〰〰〰️',
         reply_markup=create_main_keyboard(
-            config.get_reviews_channel(), is_admin(bot, user_id)),
+            config.get_reviews_channel(), is_admin(bot, user_id), total),
     )
 
     return BOT_STATE_INIT
@@ -475,6 +479,7 @@ def enter_state_init_order_confirmed(bot, update, user_data):
 
 def enter_state_init_order_cancelled(bot, update, user_data):
     user_id = get_user_id(update)
+    total = cart.get_cart_total(get_user_session(user_id))
     update.message.reply_text(text=_('<b>Order cancelled</b>'),
                               reply_markup=ReplyKeyboardRemove(),
                               parse_mode=ParseMode.HTML, )
@@ -483,7 +488,8 @@ def enter_state_init_order_cancelled(bot, update, user_data):
                      text=config.get_welcome_text().format(
                          update.message.from_user.first_name),
                      reply_markup=create_main_keyboard(
-                         config.get_reviews_channel(), is_admin(bot, user_id)))
+                         config.get_reviews_channel(), is_admin(bot, user_id),
+                         total))
     return BOT_STATE_INIT
 
 #
@@ -862,6 +868,7 @@ def on_settings_menu(bot, update):
     query = update.callback_query
     data = query.data
     user_id = get_user_id(update)
+    total = cart.get_cart_total(get_user_session(user_id))
     if data == 'settings_statistics':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -885,7 +892,7 @@ def on_settings_menu(bot, update):
                                   update.callback_query.from_user.first_name),
                               reply_markup=create_main_keyboard(
                                   config.get_reviews_channel(),
-                                  is_admin(bot, user_id)),
+                                  is_admin(bot, user_id), total),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return BOT_STATE_INIT
@@ -1145,13 +1152,19 @@ def on_admin_couriers(bot, update):
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text='Enter new courier nickname',
-                              parse_mode=ParseMode.MARKDOWN)
+                              parse_mode=ParseMode.MARKDOWN,
+                              reply_markup=create_back_button()
+                              ),
+
         return ADMIN_TXT_COURIER_NAME
     elif data == 'bot_couriers_delete':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text='Choose courier ID to delete',
-                              parse_mode=ParseMode.MARKDOWN)
+                              parse_mode=ParseMode.MARKDOWN,
+                              reply_markup=create_back_button()
+                              )
+
         return ADMIN_TXT_DELETE_COURIER
 
     return ConversationHandler.END
@@ -1192,7 +1205,10 @@ def on_admin_channels(bot, update):
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
-                              parse_mode=ParseMode.MARKDOWN)
+                              parse_mode=ParseMode.MARKDOWN,
+                              reply_markup=create_back_button()
+                              )
+
         return ADMIN_CHANNELS_SELECT_TYPE
     elif data == 'bot_channels_remove':
         types = ['Reviews', 'Service', 'Customer', 'Vip customer', 'Courier']
@@ -1203,7 +1219,10 @@ def on_admin_channels(bot, update):
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
-                              parse_mode=ParseMode.MARKDOWN)
+                              parse_mode=ParseMode.MARKDOWN,
+                              reply_markup=create_back_button()
+                              )
+
         return ADMIN_CHANNELS_REMOVE
 
     return ConversationHandler.END
@@ -1331,12 +1350,15 @@ def main():
                 on_statistics_menu, pattern='^statistics')],
             ADMIN_BOT_SETTINGS: [CallbackQueryHandler(
                 on_bot_settings_menu, pattern='^bot_settings')],
-            ADMIN_COURIERS: [CallbackQueryHandler(
-                on_admin_couriers, pattern='^bot_couriers')],
+            ADMIN_COURIERS: [
+                CallbackQueryHandler(
+                    on_admin_couriers, pattern='^bot_couriers')],
             ADMIN_CHANNELS: [
                 CallbackQueryHandler(on_admin_channels, pattern='^bot_channels')
             ],
             ADMIN_CHANNELS_SELECT_TYPE: [
+                CallbackQueryHandler(
+                    on_admin_select_channel_type, pass_user_data=True),
                 MessageHandler(Filters.text, on_admin_select_channel_type,
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel)
@@ -1347,6 +1369,8 @@ def main():
                 CommandHandler('cancel', on_admin_cancel)
             ],
             ADMIN_CHANNELS_REMOVE: [
+                CallbackQueryHandler(
+                    on_admin_remove_channel, pass_user_data=True),
                 MessageHandler(Filters.text, on_admin_remove_channel,
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel)
@@ -1475,6 +1499,8 @@ def main():
                 CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_TXT_COURIER_NAME: [
+                CallbackQueryHandler(
+                    on_admin_txt_courier_name, pass_user_data=True),
                 MessageHandler(Filters.text, on_admin_txt_courier_name,
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel),
@@ -1485,12 +1511,15 @@ def main():
                 CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_TXT_COURIER_LOCATION: [
-                MessageHandler(Filters.text, on_admin_txt_courier_location,
-                               pass_user_data=True),
+                CallbackQueryHandler(
+                    on_admin_btn_courier_location, pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel),
             ],
             ADMIN_TXT_DELETE_COURIER: [
-                MessageHandler(Filters.text, on_admin_txt_delete_courier),
+                CallbackQueryHandler(
+                    on_admin_txt_delete_courier, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_txt_delete_courier,
+                               pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel),
             ],
         },

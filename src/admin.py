@@ -14,7 +14,7 @@ from .models import Product, ProductCount, Courier, Location, CourierLocation
 from .keyboards import create_bot_config_keyboard, create_back_button, \
     create_bot_couriers_keyboard, create_bot_channels_keyboard, \
     create_bot_settings_keyboard, create_bot_order_options_keyboard, \
-    create_ban_list_keyboard
+    create_ban_list_keyboard, create_courier_locations_keyboard
 
 DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
@@ -344,11 +344,19 @@ def on_admin_txt_delete_product(bot, update, user_data):
 
 
 def on_admin_txt_courier_name(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        query = update.callback_query
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Couriers',
+                              reply_markup=create_bot_couriers_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_COURIERS
+
     name = update.message.text
     # initialize new courier data
     user_data['add_courier'] = {}
     user_data['add_courier']['name'] = name
-
     text = 'Enter courier telegram_id'
     update.message.reply_text(text=text)
     return ADMIN_TXT_COURIER_ID
@@ -357,49 +365,93 @@ def on_admin_txt_courier_name(bot, update, user_data):
 def on_admin_txt_courier_id(bot, update, user_data):
     telegram_id = update.message.text
     user_data['add_courier']['telegram_id'] = telegram_id
+    if 'location_ids' not in user_data['add_courier']:
+        user_data['add_courier']['location_ids'] = []
+    location_ids = user_data['add_courier']['location_ids']
 
-    text = 'Enter location ID for this courier (choose number or list of ' \
-           'numbers from list below, example: 1 or 1, 2):'
-
+    text = 'Choose locations for new courier'
+    locations = []
     for location in Location:
-        text += '\n'
-        text += '{}. {}'.format(location.id, location.title)
+        is_picked = False
+        if location.id in location_ids:
+            is_picked = True
+        locations.append((location.title, location.id, is_picked))
 
-    update.message.reply_text(text=text)
+    update.message.reply_text(
+        text=text,
+        reply_markup=create_courier_locations_keyboard(locations)
+    )
+
     return ADMIN_TXT_COURIER_LOCATION
 
 
-def on_admin_txt_courier_location(bot, update, user_data):
-    location_ids = update.message.text.split(', ')
-    user_data['add_courier']['location_ids'] = location_ids
-    username = user_data['add_courier']['name']
-    telegram_id = user_data['add_courier']['telegram_id']
-    # check that location name is valid
-    locations = Location.filter(id__in=location_ids)
-    try:
-        Courier.get(username=username, telegram_id=telegram_id)
-        update.message.reply_text(text='Courier with username @{} '
-                                       'already added'.format(username))
-    except Courier.DoesNotExist:
-        courier = Courier.create(username=username, telegram_id=telegram_id)
-        for location in locations:
-            CourierLocation.create(courier=courier, location=location)
-        # clear new courier data
-        del user_data['add_courier']
-        bot.send_message(chat_id=update.message.chat_id,
-                         text='Courier added',
+def on_admin_btn_courier_location(bot, update, user_data):
+    query = update.callback_query
+    if update.callback_query.data == 'location_end':
+        location_ids = user_data['add_courier']['location_ids']
+        username = user_data['add_courier']['name']
+        telegram_id = user_data['add_courier']['telegram_id']
+        # check that location name is valid
+        locations = Location.filter(id__in=location_ids)
+        try:
+            Courier.get(username=username, telegram_id=telegram_id)
+            query.message.reply_text(text='Courier with username @{} '
+                                           'already added'.format(username))
+        except Courier.DoesNotExist:
+            courier = Courier.create(username=username, telegram_id=telegram_id)
+            for location in locations:
+                CourierLocation.create(courier=courier, location=location)
+            # clear new courier data
+            del user_data['add_courier']
+            bot.send_message(chat_id=query.message.chat_id,
+                             text='Courier added',
+                             reply_markup=create_bot_couriers_keyboard(),
+                             parse_mode=ParseMode.MARKDOWN)
+            return ADMIN_COURIERS
+
+        bot.send_message(chat_id=query.message.chat_id,
+                         text='Couriers',
                          reply_markup=create_bot_couriers_keyboard(),
                          parse_mode=ParseMode.MARKDOWN)
+
         return ADMIN_COURIERS
 
-    bot.send_message(chat_id=update.message.chat_id,
-                     text='Couriers',
-                     reply_markup=create_bot_couriers_keyboard(),
-                     parse_mode=ParseMode.MARKDOWN)
-    return ADMIN_COURIERS
+    location_id = update.callback_query.data
+    location_ids = user_data['add_courier']['location_ids']
+    if location_id in location_ids:
+        location_ids = [l_id for l_id in location_ids if location_id != l_id]
+        text = 'Location removed'
+    else:
+        location_ids.append(location_id)
+        text = 'Location added'
+    user_data['add_courier']['location_ids'] = location_ids
+
+    locations = []
+    for location in Location:
+        is_picked = False
+        if str(location.id) in location_ids:
+            is_picked = True
+        locations.append((location.title, location.id, is_picked))
+
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=text,
+                          reply_markup=create_courier_locations_keyboard(locations),
+                          parse_mode=ParseMode.MARKDOWN)
+
+    return ADMIN_TXT_COURIER_LOCATION
 
 
-def on_admin_txt_delete_courier(bot, update):
+def on_admin_txt_delete_courier(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        query = update.callback_query
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Couriers',
+                              reply_markup=create_bot_couriers_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_COURIERS
+
     courier_id = update.message.text
 
     # check that courier id is valid
@@ -451,6 +503,15 @@ def new_welcome_message(bot, update):
 
 
 def on_admin_select_channel_type(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        query = update.callback_query
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Channels',
+                              reply_markup=create_bot_channels_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_CHANNELS
+
     channel_type = int(update.message.text)
     if channel_type in range(1, 5):
         user_data['add_channel'] = {}
@@ -492,6 +553,15 @@ def on_admin_add_channel_address(bot, update, user_data):
 
 
 def on_admin_remove_channel(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        query = update.callback_query
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Channels',
+                              reply_markup=create_bot_channels_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_CHANNELS
+
     types = ['reviews_channel', 'service_channel', 'customers_channel',
              'vip_customers_channel', 'couriers_channel']
     channel_type = int(update.message.text)
