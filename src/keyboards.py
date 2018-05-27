@@ -124,6 +124,16 @@ def create_main_keyboard(review_channel, is_admin=None, total_price=0):
     return InlineKeyboardMarkup(main_button_list)
 
 
+def create_bot_language_keyboard():
+    keyboard = [
+        [InlineKeyboardButton(
+            _("Hebrew"), callback_data='bot_settings_lng_he')],
+        [InlineKeyboardButton(
+            _("English"), callback_data='bot_settings_lng_en')]
+    ]
+    return InlineKeyboardMarkup(keyboard)   # , resize_keyboard=True
+
+
 def create_product_keyboard(product_id, user_data, cart):
     button_row = []
 

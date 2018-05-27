@@ -10,7 +10,7 @@ from src.enums import *
 from src.messages import create_confirmation_text, create_product_description, \
     create_service_notice
 from src.helpers import CartHelper, session_client, get_user_session, \
-    get_user_id, get_username
+    get_user_id, get_username, get_locale
 from src.keyboards import create_drop_responsibility_keyboard, \
     create_service_notice_keyboard, create_main_keyboard, \
     create_pickup_location_keyboard, create_product_keyboard, \
@@ -19,7 +19,7 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_admin_keyboard, create_statistics_keyboard, \
     create_bot_settings_keyboard, create_bot_couriers_keyboard, \
     create_bot_channels_keyboard, create_bot_order_options_keyboard, \
-    create_back_button, create_on_off_buttons, create_ban_list_keyboard
+    create_back_button, create_on_off_buttons, create_ban_list_keyboard, create_bot_language_keyboard
 from src.models import create_tables, User, Courier, Order, OrderItem, \
     Product, ProductCount
 
@@ -28,7 +28,7 @@ logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
 logger = logging.getLogger(__name__)
 
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-DEBUG = os.environ.get('DEBUG')
+DEBUG = True  # os.environ.get('DEBUG')
 
 _ = gettext.gettext
 if not DEBUG:
@@ -163,10 +163,11 @@ def make_unconfirm(bot, update, user_data):
 def on_start(bot, update, user_data):
     user_id = get_user_id(update)
     username = get_username(update)
+    language = get_locale(update)
     try:
         user = User.get(telegram_id=user_id)
     except User.DoesNotExist:
-        user = User(telegram_id=user_id, username=username)
+        user = User(telegram_id=user_id, username=username, locale=language)
         user.save()
     BOT_ON = config.get_bot_on_off() and username not in config.get_banned_users()
     if BOT_ON or is_admin(bot, user_id):
@@ -1045,6 +1046,31 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_MENU
+
+    elif data == 'bot_settings_lng_he':
+        profile = User.get(telegram_id=update.user.telegram_id)
+        profile.locale = "he"
+        profile.save()
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Languages',
+                              reply_markup=create_bot_language_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return LANGUAGE_CHANGED
+
+    elif data == 'bot_settings_lng_en':
+        profile = User.get(telegram_id=update.user.telegram_id)
+        profile.locale = "en"
+        profile.save()
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text='Languages',
+                              reply_markup=create_bot_language_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return LANGUAGE_CHANGED
+
     elif data == 'bot_settings_couriers':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1335,6 +1361,12 @@ def main():
                                pass_user_data=True),
             ],
             BOT_STATE_ORDER_CONFIRMATION: [
+                CallbackQueryHandler(checkout_fallback_command_handler,
+                                     pass_user_data=True),
+                MessageHandler(Filters.text, on_confirm_order,
+                               pass_user_data=True),
+            ],
+            LANGUAGE_CHANGED: [
                 CallbackQueryHandler(checkout_fallback_command_handler,
                                      pass_user_data=True),
                 MessageHandler(Filters.text, on_confirm_order,

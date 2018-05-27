@@ -1,11 +1,11 @@
 import datetime
-from os.path import dirname, abspath
+from os.path import dirname, abspath, join
 from enum import Enum
 from peewee import Model, CharField, IntegerField, SqliteDatabase, \
     ForeignKeyField, DecimalField, BlobField, BooleanField, DateField
 
 d = dirname(dirname(abspath(__file__)))
-db = SqliteDatabase(d + '/db.sqlite')
+db = SqliteDatabase(join(d, 'db.sqlite'))
 
 
 class DeliveryMethod(Enum):
@@ -25,6 +25,7 @@ class Location(BaseModel):
 class User(BaseModel):
     username = CharField()
     telegram_id = IntegerField()
+    locale = CharField(max_length=4, default="he")
     phone_number = CharField(null=True)
 
 

@@ -16,7 +16,7 @@ from .keyboards import create_bot_config_keyboard, create_back_button, \
     create_bot_settings_keyboard, create_bot_order_options_keyboard, \
     create_ban_list_keyboard, create_courier_locations_keyboard
 
-DEBUG = os.environ.get('DEBUG')
+DEBUG = True  # os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
 
 _ = gettext.gettext
