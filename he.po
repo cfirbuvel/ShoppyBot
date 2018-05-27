@@ -43,6 +43,30 @@ msgstr "✅ אשר"
 msgid "❌ Cancel"
 msgstr "❌ בטל"
 
+#: shoppybot.py:66
+msgid "Take Responsibility"
+msgstr "✅ קבל משלוח/איסוף"
+
+#: shoppybot.py:66
+msgid "Drop responsibility"
+msgstr "❌ בטל משלוח/איסוף"
+
+#: shoppybot.py:66
+msgid "Assigned to @{}"
+msgstr "נשלח ע״י @{}"
+
+#: shoppybot.py:66
+msgid "Yes"
+msgstr "✅ אשר שליחות"
+
+#: shoppybot.py:66
+msgid "No"
+msgstr "❌ בטל שליחות"
+
+#: shoppybot.py:66
+msgid "Courier: @{}, apply for order №{}.\nConfirm this?"
+msgstr "שליח @{} קיבל את הזמנה מס׳{}.\nהאם אתה רוצה לאשר?"
+
 #: shoppybot.py:112
 msgid "👍"
 msgstr "👍"
@@ -109,8 +133,8 @@ msgid "Total: <b>${}</b>"
 msgstr "סה״כ: {}₪"
 
 #: shoppybot.py:196
-msgid "<b>Order notice:</b>"
-msgstr "פרטי הזמנה:"
+msgid "<b>Order №{} notice:</b>"
+msgstr "<b>פרטי הזמנה מס׳{}:</b>"
 
 #: shoppybot.py:196
 msgid "Vip Costumer"
@@ -179,6 +203,130 @@ msgstr "⏰ שעות פעילות"
 #: shoppybot.py:303
 msgid "☎ Contact info"
 msgstr "☎ צור קשר"
+
+#: shoppybot.py:304
+msgid "⚙️ Settings"
+msgstr "⚙️ הגדרות"
+
+#: shoppybot.py:305
+msgid "⚙ Bot settings"
+msgstr "⚙️ הגדרות בוט"
+
+#: shoppybot.py:306
+msgid "📈 Statistics"
+msgstr "📈 סטטיסטיקות"
+
+#: shoppybot.py:307
+msgid "🛵 Couriers"
+msgstr "🚕 שליחים"
+
+#: shoppybot.py:308
+msgid "✉️ Channels"
+msgstr "✉️ ערוצים"
+
+#: shoppybot.py:309
+msgid "💳 Order options"
+msgstr "💳 הגדרות הזמנה"
+
+#: shoppybot.py:310
+msgid "🔥 Client ban-list"
+msgstr "🔥 רשימה שחורה"
+
+#: shoppybot.py:311
+msgid "☎️ Edit contact info"
+msgstr "☎️ עריכת צור קשר"
+
+#: shoppybot.py:312
+msgid "⏰ Edit working hours"
+msgstr "⏰ עריכת שעות פעילות"
+
+#: shoppybot.py:313
+msgid "⚡️ Bot ON/OFF"
+msgstr "⚡️ בוט פעיל/סגור"
+
+#: shoppybot.py:314
+msgid "❌Reset all data❌"
+msgstr "❌מחק נתונים❌"
+
+#: shoppybot.py:315
+msgid "🛵 View couriers"
+msgstr "🚕 השליחים שלי"
+
+#: shoppybot.py:316
+msgid "➕ Add couriers"
+msgstr "➕ הוסף שליח"
+
+#: shoppybot.py:317
+msgid "➖ Remove couriers"
+msgstr "➖ מחק שליח"
+
+#: shoppybot.py:318
+msgid "✉️ View channels"
+msgstr "🎚 הערוצים שלי"
+
+#: shoppybot.py:319
+msgid "➕ Add channel"
+msgstr "➕ הוסף ערוץ"
+
+#: shoppybot.py:320
+msgid "➖ Remove channel"
+msgstr "➖ מחק ערוץ"
+
+#: shoppybot.py:320
+msgid "➕️ Add new product"
+msgstr "➕ הוסף מוצר"
+
+#: shoppybot.py:320
+msgid "➖️ Delete product"
+msgstr "➖ מחק מוצר"
+
+#: shoppybot.py:320
+msgid "💲 Add discount"
+msgstr "💲 הוסף הנחה"
+
+#: shoppybot.py:320
+msgid "💲🚕 Add delivery fee"
+msgstr "💲🚕 הוסף דמי משלוח"
+
+#: shoppybot.py:318
+msgid "👨‍ Edit identify process"
+msgstr "👨‍ ערוך תהליך אימות"
+
+#: shoppybot.py:318
+msgid "🔥 Edit Restricted area"
+msgstr "🔥 ערוך מגבלות בוט"
+
+#: shoppybot.py:318
+msgid "✉ Edit Welcome message"
+msgstr "✉ ערוך הודעת פתיחה"
+
+#: shoppybot.py:318
+msgid "✉ Edit Order details message"
+msgstr "✉ ערוך הודעת הזמנה"
+
+#: shoppybot.py:318
+msgid "✉ Edit Final message"
+msgstr "✉ ערוך הודעת סיכום הזמנה"
+
+#: shoppybot.py:318
+msgid "🔥 View ban list"
+msgstr "🔥 צפה ברשימה השחורה"
+
+#: shoppybot.py:318
+msgid "➖ Remove from ban list"
+msgstr "➖ מחק מהרשימה השחורה"
+
+#: shoppybot.py:318
+msgid "➕ Add to ban list"
+msgstr "➕ הוסף לרשימה השחורה"
+
+#: shoppybot.py:318
+msgid "ON"
+msgstr "✅ בוט פעיל"
+
+#: shoppybot.py:318
+msgid "OFF"
+msgstr "⛔️ בוט סגור"
 
 #: shoppybot.py:313
 msgid "Assign @{}"
@@ -270,12 +418,16 @@ msgstr ""
 " אין לך הרשאה להשתמש בפקודה"
 
 #: shoppybot.py:1063
+msgid "Hello `@{}`, ID number `{}`"
+msgstr "היי `@{}`, ID number `{}`"
+
+#: shoppybot.py:1063
 msgid "Courier @{} assigned to your order"
 msgstr "השליח, @{} בדרך!"
 
 #: shoppybot.py:1068
 msgid "Courier {} assigned"
-msgstr ""
+msgstr "@{} קיבל את המשלוח"
 
 #~ msgid "{} x {} = ${}"
 #~ msgstr "₪{} = {} x {}"
@@ -301,3 +453,8 @@ msgstr ""
 
 #~ msgid "facebook image"
 #~ msgstr "תמונת פייסבוק"
+
+#: shoppybot.py:559
+msgid "**Couriers**"
+msgstr "**שליחים**"
+
