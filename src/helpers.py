@@ -166,6 +166,12 @@ class ConfigHelper:
             value = self.config.get(self.section, 'delivery_fee')
         return int(value.strip())
 
+    def get_delivery_min(self):
+        value = get_config_session().get('delivery_min')
+        if value is None:
+            value = 0
+        return int(value)
+
     def get_bot_on_off(self):
         value = get_config_session().get('bot_on_off')
         if value is None:

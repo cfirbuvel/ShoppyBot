@@ -226,6 +226,7 @@ def on_menu(bot, update, user_data=None):
                     subtotal = cart.get_product_subtotal(
                         user_data, product.id)
                     delivery_fee = config.get_delivery_fee()
+                    delivery_min = config.get_delivery_min()
                     product_title, prices = cart.product_full_info(
                         user_data, product.id)
                     image_data = product.image
@@ -235,7 +236,7 @@ def on_menu(bot, update, user_data=None):
                     bot.send_message(query.message.chat_id,
                                      text=create_product_description(
                                          product_title, prices,
-                                         product_count, subtotal,
+                                         product_count, subtotal, delivery_min,
                                          delivery_fee),
                                      reply_markup=create_product_keyboard(
                                          product.id, user_data, cart),
@@ -289,6 +290,7 @@ def on_menu(bot, update, user_data=None):
 
                 subtotal = cart.get_product_subtotal(user_data, product_id)
                 delivery_fee = config.get_delivery_fee()
+                delivery_min = config.get_delivery_min()
                 product_title, prices = cart.product_full_info(
                     user_data, product_id)
                 product_count = cart.get_product_count(user_data, product_id)
@@ -297,7 +299,7 @@ def on_menu(bot, update, user_data=None):
                                       message_id=query.message.message_id,
                                       text=create_product_description(
                                              product_title, prices,
-                                             product_count, subtotal,
+                                             product_count, subtotal, delivery_min,
                                              delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
@@ -309,6 +311,7 @@ def on_menu(bot, update, user_data=None):
 
                 subtotal = cart.get_product_subtotal(user_data, product_id)
                 delivery_fee = config.get_delivery_fee()
+                delivery_min = config.get_delivery_min()
                 product_title, prices = cart.product_full_info(
                     user_data, product_id)
                 product_count = cart.get_product_count(user_data, product_id)
@@ -317,7 +320,7 @@ def on_menu(bot, update, user_data=None):
                                       message_id=query.message.message_id,
                                       text=create_product_description(
                                              product_title, prices,
-                                             product_count, subtotal,
+                                             product_count, subtotal, delivery_min,
                                              delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
@@ -448,10 +451,11 @@ def enter_state_order_confirm(bot, update, user_data):
     shipping_data = user_data['shipping']
     total = cart.get_cart_total(user_data)
     delivery_cost = config.get_delivery_fee()
+    delivery_min = config.get_delivery_min()
     product_info = cart.get_products_info(user_data)
     update.message.reply_text(
         text=create_confirmation_text(
-            is_pickup, shipping_data, total, delivery_cost, product_info),
+            is_pickup, shipping_data, total, delivery_min, delivery_cost, product_info),
         reply_markup=create_confirmation_keyboard(),
         parse_mode=ParseMode.HTML,
     )
@@ -499,6 +503,18 @@ def enter_state_init_order_cancelled(bot, update, user_data):
 
 
 def on_shipping_method(bot, update, user_data):
+    key = update.message.text
+    user_id = get_user_id(update)
+    user_data = get_user_session(user_id)
+    if key == BUTTON_TEXT_CANCEL:
+        return enter_state_init_order_cancelled(bot, update, user_data)
+    else:
+        user_data['shipping']['method'] = key
+        session_client.json_set(user_id, user_data)
+        return enter_state_courier_location(bot, update, user_data)
+
+
+def on_bot_language_change(bot, update, user_data):
     key = update.message.text
     user_id = get_user_id(update)
     user_data = get_user_session(user_id)
@@ -701,6 +717,7 @@ def on_confirm_order(bot, update, user_data):
         shipping_data = user_data['shipping']
         total = cart.get_cart_total(user_data)
         delivery_cost = config.get_delivery_fee()
+        delivery_min = config.get_delivery_min()
         # ORDER CONFIRMED, send the details to service channel
         bot.send_message(config.get_service_channel(),
                          text=_('Order confirmed from (@{})').format(
@@ -710,7 +727,7 @@ def on_confirm_order(bot, update, user_data):
         bot.send_message(config.get_service_channel(),
                          text=create_service_notice(
                              is_pickup, order_id, product_info, shipping_data,
-                             total, delivery_cost),
+                             total, delivery_min, delivery_cost),
                          parse_mode=ParseMode.HTML,
                          )
 
@@ -741,7 +758,7 @@ def on_confirm_order(bot, update, user_data):
             bot.send_message(config.get_couriers_channel(),
                              text=create_service_notice(
                                  is_pickup, order_id, product_info,
-                                 shipping_data, total, delivery_cost),
+                                 shipping_data, total, delivery_min, delivery_cost),
                              parse_mode=ParseMode.HTML,
                              reply_markup=create_service_notice_keyboard(
                                  update, user_id, order_id),
@@ -783,7 +800,7 @@ def on_confirm_order(bot, update, user_data):
         else:
             return enter_state_shipping_time(bot, update, user_data)
     else:
-        logger.warn("Unknown input %s", key)
+        logger.warning("Unknown input %s", key)
 
 
 def on_cancel(bot, update, user_data):
@@ -1134,6 +1151,16 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_BOT_ON_OFF
+    elif data == 'bot_settings_bot_language':
+        bot_language = config.get_bot_on_off()
+        msg = 'Bot language: {}'.format(bot_language)
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=msg,
+                              reply_markup=create_bot_language_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return LANGUAGE_CHANGED
     elif data == 'bot_settings_reset_all_data':
         set_config_session({})
         bot.edit_message_text(chat_id=query.message.chat_id,
@@ -1370,7 +1397,7 @@ def main():
             LANGUAGE_CHANGED: [
                 CallbackQueryHandler(checkout_fallback_command_handler,
                                      pass_user_data=True),
-                MessageHandler(Filters.text, on_confirm_order,
+                MessageHandler(Filters.text, on_bot_language_change,
                                pass_user_data=True),
             ],
 

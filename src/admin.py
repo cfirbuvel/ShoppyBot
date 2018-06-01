@@ -649,10 +649,16 @@ def on_admin_add_delivery(bot, update, user_data):
             'Order options')
         return ADMIN_ORDER_OPTIONS
 
-    delivery_fee = update.message.text
+    delivery = update.message.text
+    cleaned_data = [int(i.strip()) for i in delivery.split('>')]
     config_session = get_config_session()
-    config_session['delivery_fee'] = delivery_fee
+    config_session['delivery_fee'] = cleaned_data[0]
+    if len(cleaned_data) == 2:
+        config_session['delivery_min'] = cleaned_data[1]
+    else:
+        config_session['delivery_min'] = 0
     set_config_session(config_session)
+
     bot.send_message(chat_id=update.message.chat_id,
                      text='Delivery fee was changed',
                      reply_markup=create_bot_order_options_keyboard(),
@@ -701,7 +707,7 @@ def on_admin_edit_welcome_message(bot, update, user_data):
     config_session['welcome_text'] = welcome_message
     set_config_session(config_session)
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Welcome message fee was changed',
+                     text='Welcome message was changed',
                      reply_markup=create_bot_order_options_keyboard(),
                      parse_mode=ParseMode.MARKDOWN)
     return ADMIN_ORDER_OPTIONS
