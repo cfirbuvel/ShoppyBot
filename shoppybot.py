@@ -28,7 +28,7 @@ logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
 logger = logging.getLogger(__name__)
 
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-DEBUG = True  # os.environ.get('DEBUG')
+DEBUG = os.environ.get('DEBUG')
 
 _ = gettext.gettext
 if not DEBUG:
@@ -1164,9 +1164,10 @@ def on_admin_couriers(bot, update):
         for courier in couriers:
             locations = CourierLocation.filter(courier=courier)
             locations = [item.location.title for item in locations]
-            msg += '\nname: @{} id: {}, telegram id: {}, location: {}'.format(
+            msg += '\nname: `@{}`\nbotID: `{}`\ntelegram ID: `{}`\nlocation: `{}`\n local: `{}`'.format(
                 courier.username, courier.id, courier.telegram_id,
-                locations)
+                locations, courier.locale)
+            msg += '\n'
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,

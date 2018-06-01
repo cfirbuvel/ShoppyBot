@@ -109,7 +109,7 @@ def create_main_keyboard(review_channel, is_admin=None, total_price=0):
     main_button_list = [
         [InlineKeyboardButton(_('🏪 Our products'),
                               callback_data='menu_products')],
-        [InlineKeyboardButton(_('🛍 Checkout {}'.format(total_price)),
+        [InlineKeyboardButton(_('🛍 Checkout {}').format(total_price),
                               callback_data='menu_order')],
         [InlineKeyboardButton(_('⭐ Reviews'), url=review_channel)],
         [InlineKeyboardButton(_('⏰ Working hours'),
