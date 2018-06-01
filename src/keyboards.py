@@ -216,6 +216,8 @@ def create_bot_settings_keyboard():
                               callback_data='bot_settings_edit_contact_info')],
         [InlineKeyboardButton(_('⚡️ Bot ON/OFF'),
                               callback_data='bot_settings_bot_on_off')],
+        [InlineKeyboardButton(_('🈚︎   Bot Language'),
+                              callback_data='bot_settings_bot_language')],
         [InlineKeyboardButton(_('💫 Reset all data'),
                               callback_data='bot_settings_reset_all_data')],
         [InlineKeyboardButton(_('↩ Back'),

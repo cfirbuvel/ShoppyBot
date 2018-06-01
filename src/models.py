@@ -5,7 +5,7 @@ from peewee import Model, CharField, IntegerField, SqliteDatabase, \
     ForeignKeyField, DecimalField, BlobField, BooleanField, DateField
 
 d = dirname(dirname(abspath(__file__)))
-db = SqliteDatabase(join(d, 'db.sqlite'))
+db = SqliteDatabase(join(d, 'shoppybot_db.sqlite'))
 
 
 class DeliveryMethod(Enum):

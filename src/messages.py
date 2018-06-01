@@ -10,14 +10,14 @@ if not DEBUG:
 
 
 def create_product_description(product_title, product_prices, product_count,
-                               subtotal, delivery_fee):
+                               subtotal, delivery_min, delivery_fee):
     text = _('Product:\n{}').format(product_title)
     text += '\n\n'
     text += '〰️'
     text += '\n'
     text += _('<b>Delivery Fee: {}$</b>').format(delivery_fee)
     text += '\n'
-    text += _('for orders blow 500$')
+    text += _('for orders below {}$').format(delivery_min)
     text += '\n'
     text += '〰️'
     text += '\n'
@@ -39,7 +39,7 @@ def create_product_description(product_title, product_prices, product_count,
     return text
 
 
-def create_confirmation_text(is_pickup, shipping_data, total, delivery_cost,
+def create_confirmation_text(is_pickup, shipping_data, total, delivery_min, delivery_cost,
                              product_info):
 
     text = _('<b>Please confirm your order:</b>')
@@ -62,7 +62,7 @@ def create_confirmation_text(is_pickup, shipping_data, total, delivery_cost,
         if key == 'vip':
             is_vip = True
 
-    if total < 500:
+    if total < delivery_min:
         if is_pickup:
             text += '\n\n'
             text += _('Total: <b>${}</b>').format(total)
@@ -83,7 +83,7 @@ def create_confirmation_text(is_pickup, shipping_data, total, delivery_cost,
 
 
 def create_service_notice(is_pickup, order_id, product_info, shipping_data,
-                          total, delivery_cost):
+                          total, delivery_min, delivery_cost):
 
     text = _('<b>Order №{} notice:</b>'.format(order_id))
     text += '\n\n'
@@ -104,7 +104,7 @@ def create_service_notice(is_pickup, order_id, product_info, shipping_data,
         if key == 'vip':
             is_vip = True
 
-    if total < 500:
+    if total < delivery_min:
         if is_pickup:
             text += '\n\n'
             text += _('Total: <b>${}</b>').format(total)
