@@ -10,7 +10,7 @@ from src.enums import *
 from src.messages import create_confirmation_text, create_product_description, \
     create_service_notice
 from src.helpers import CartHelper, session_client, get_user_session, \
-    get_user_id, get_username, get_locale
+    get_user_id, get_username
 from src.keyboards import create_drop_responsibility_keyboard, \
     create_service_notice_keyboard, create_main_keyboard, \
     create_pickup_location_keyboard, create_product_keyboard, \
@@ -19,7 +19,7 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_admin_keyboard, create_statistics_keyboard, \
     create_bot_settings_keyboard, create_bot_couriers_keyboard, \
     create_bot_channels_keyboard, create_bot_order_options_keyboard, \
-    create_back_button, create_on_off_buttons, create_ban_list_keyboard, create_bot_language_keyboard
+    create_back_button, create_on_off_buttons, create_ban_list_keyboard
 from src.models import create_tables, User, Courier, Order, OrderItem, \
     Product, ProductCount
 
@@ -163,11 +163,10 @@ def make_unconfirm(bot, update, user_data):
 def on_start(bot, update, user_data):
     user_id = get_user_id(update)
     username = get_username(update)
-    language = get_locale(update)
     try:
         user = User.get(telegram_id=user_id)
     except User.DoesNotExist:
-        user = User(telegram_id=user_id, username=username, locale=language)
+        user = User(telegram_id=user_id, username=username)
         user.save()
     BOT_ON = config.get_bot_on_off() and username not in config.get_banned_users()
     if BOT_ON or is_admin(bot, user_id):
@@ -236,8 +235,8 @@ def on_menu(bot, update, user_data=None):
                     bot.send_message(query.message.chat_id,
                                      text=create_product_description(
                                          product_title, prices,
-                                         product_count, subtotal, delivery_min,
-                                         delivery_fee),
+                                         product_count, subtotal,
+                                         delivery_min, delivery_fee),
                                      reply_markup=create_product_keyboard(
                                          product.id, user_data, cart),
                                      parse_mode=ParseMode.HTML,
@@ -299,8 +298,8 @@ def on_menu(bot, update, user_data=None):
                                       message_id=query.message.message_id,
                                       text=create_product_description(
                                              product_title, prices,
-                                             product_count, subtotal, delivery_min,
-                                             delivery_fee),
+                                             product_count, subtotal,
+                                          delivery_min, delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
                                       parse_mode=ParseMode.HTML, )
@@ -320,8 +319,8 @@ def on_menu(bot, update, user_data=None):
                                       message_id=query.message.message_id,
                                       text=create_product_description(
                                              product_title, prices,
-                                             product_count, subtotal, delivery_min,
-                                             delivery_fee),
+                                             product_count, subtotal,
+                                             delivery_min, delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
                                       parse_mode=ParseMode.HTML, )
@@ -455,7 +454,7 @@ def enter_state_order_confirm(bot, update, user_data):
     product_info = cart.get_products_info(user_data)
     update.message.reply_text(
         text=create_confirmation_text(
-            is_pickup, shipping_data, total, delivery_min, delivery_cost, product_info),
+            is_pickup, shipping_data, total, delivery_cost, delivery_min, product_info),
         reply_markup=create_confirmation_keyboard(),
         parse_mode=ParseMode.HTML,
     )
@@ -485,6 +484,9 @@ def enter_state_init_order_confirmed(bot, update, user_data):
 def enter_state_init_order_cancelled(bot, update, user_data):
     user_id = get_user_id(update)
     total = cart.get_cart_total(get_user_session(user_id))
+    user_data['cart'] = {}
+    user_data['shipping'] = {}
+    session_client.json_set(user_id, user_data)
     update.message.reply_text(text=_('<b>Order cancelled</b>'),
                               reply_markup=ReplyKeyboardRemove(),
                               parse_mode=ParseMode.HTML, )
@@ -503,18 +505,6 @@ def enter_state_init_order_cancelled(bot, update, user_data):
 
 
 def on_shipping_method(bot, update, user_data):
-    key = update.message.text
-    user_id = get_user_id(update)
-    user_data = get_user_session(user_id)
-    if key == BUTTON_TEXT_CANCEL:
-        return enter_state_init_order_cancelled(bot, update, user_data)
-    else:
-        user_data['shipping']['method'] = key
-        session_client.json_set(user_id, user_data)
-        return enter_state_courier_location(bot, update, user_data)
-
-
-def on_bot_language_change(bot, update, user_data):
     key = update.message.text
     user_id = get_user_id(update)
     user_data = get_user_session(user_id)
@@ -800,7 +790,7 @@ def on_confirm_order(bot, update, user_data):
         else:
             return enter_state_shipping_time(bot, update, user_data)
     else:
-        logger.warning("Unknown input %s", key)
+        logger.warn("Unknown input %s", key)
 
 
 def on_cancel(bot, update, user_data):
@@ -877,7 +867,7 @@ def send_welcome_message(bot, update):
             if user:
                 bot.send_message(
                     config.get_couriers_channel(),
-                    text=_('Hello `@{}`, ID number `{}`').format(
+                    text=_('Hello `@{}`\nID number `{}`').format(
                         user.username, user.id),
                     parse_mode=ParseMode.MARKDOWN)
 
@@ -1063,31 +1053,6 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_MENU
-
-    elif data == 'bot_settings_lng_he':
-        profile = User.get(telegram_id=update.user.telegram_id)
-        profile.locale = "he"
-        profile.save()
-        bot.edit_message_text(chat_id=query.message.chat_id,
-                              message_id=query.message.message_id,
-                              text='Languages',
-                              reply_markup=create_bot_language_keyboard(),
-                              parse_mode=ParseMode.MARKDOWN)
-        query.answer()
-        return LANGUAGE_CHANGED
-
-    elif data == 'bot_settings_lng_en':
-        profile = User.get(telegram_id=update.user.telegram_id)
-        profile.locale = "en"
-        profile.save()
-        bot.edit_message_text(chat_id=query.message.chat_id,
-                              message_id=query.message.message_id,
-                              text='Languages',
-                              reply_markup=create_bot_language_keyboard(),
-                              parse_mode=ParseMode.MARKDOWN)
-        query.answer()
-        return LANGUAGE_CHANGED
-
     elif data == 'bot_settings_couriers':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1151,16 +1116,6 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_BOT_ON_OFF
-    elif data == 'bot_settings_bot_language':
-        bot_language = config.get_bot_on_off()
-        msg = 'Bot language: {}'.format(bot_language)
-        bot.edit_message_text(chat_id=query.message.chat_id,
-                              message_id=query.message.message_id,
-                              text=msg,
-                              reply_markup=create_bot_language_keyboard(),
-                              parse_mode=ParseMode.MARKDOWN)
-        query.answer()
-        return LANGUAGE_CHANGED
     elif data == 'bot_settings_reset_all_data':
         set_config_session({})
         bot.edit_message_text(chat_id=query.message.chat_id,
@@ -1191,10 +1146,9 @@ def on_admin_couriers(bot, update):
         for courier in couriers:
             locations = CourierLocation.filter(courier=courier)
             locations = [item.location.title for item in locations]
-            msg += '\nname: `@{}`\nbotID: `{}`\ntelegram ID: `{}`\nlocation: `{}`\n local: `{}`'.format(
+            msg += 'name: @{}\nid: {}\ntelegram id: {}\nlocation: {}\n\n️'.format(
                 courier.username, courier.id, courier.telegram_id,
-                locations, courier.locale)
-            msg += '\n'
+                locations)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1392,12 +1346,6 @@ def main():
                 CallbackQueryHandler(checkout_fallback_command_handler,
                                      pass_user_data=True),
                 MessageHandler(Filters.text, on_confirm_order,
-                               pass_user_data=True),
-            ],
-            LANGUAGE_CHANGED: [
-                CallbackQueryHandler(checkout_fallback_command_handler,
-                                     pass_user_data=True),
-                MessageHandler(Filters.text, on_bot_language_change,
                                pass_user_data=True),
             ],
 

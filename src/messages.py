@@ -15,11 +15,12 @@ def create_product_description(product_title, product_prices, product_count,
     text += '\n\n'
     text += '〰️'
     text += '\n'
-    text += _('<b>Delivery Fee: {}$</b>').format(delivery_fee)
-    text += '\n'
-    text += _('for orders below {}$').format(delivery_min)
-    text += '\n'
-    text += '〰️'
+    if delivery_fee > 0:
+        text += _('<b>Delivery Fee: {}$</b>').format(delivery_fee)
+        text += '\n'
+        text += _('for orders blow below {}$').format(delivery_min)
+        text += '\n'
+        text += '〰️'
     text += '\n'
     text += _('Price:')
     text += '\n'
@@ -30,7 +31,7 @@ def create_product_description(product_title, product_prices, product_count,
 
     q = product_count
     if q > 0:
-        text += '\n'
+        text += '\n\n〰️\n\n'
         text += _('Count: <b>{}</b>').format(q)
         text += '\n'
         text += _('Subtotal: <b>${}</b>').format(int(subtotal))
@@ -53,7 +54,7 @@ def create_confirmation_text(is_pickup, shipping_data, total, delivery_min, deli
         text += '\n'
         text += _('Product:\n{}').format(title)
         text += '\n'
-        text += _('x {} = ${}').format(product_count, product_count * price, )
+        text += _('x {} = ${}').format(product_count, price, )
         text += '\n'
     text += '〰〰〰〰〰〰〰〰〰〰〰〰️'
 
@@ -96,7 +97,7 @@ def create_service_notice(is_pickup, order_id, product_info, shipping_data,
         text += '\n'
         text += _('Product:\n{}').format(title)
         text += '\n'
-        text += _('x {} = ${}').format(product_count, product_count * price, )
+        text += _('x {} = ${}').format(product_count, price, )
         text += '\n'
 
     is_vip = False

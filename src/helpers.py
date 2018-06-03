@@ -164,7 +164,7 @@ class ConfigHelper:
         value = get_config_session().get('delivery_fee')
         if value is None:
             value = self.config.get(self.section, 'delivery_fee')
-        return int(value.strip())
+        return int(value)
 
     def get_delivery_min(self):
         value = get_config_session().get('delivery_min')
@@ -372,15 +372,6 @@ def get_username(update):
     return username
 
 
-def get_locale(update):
-    if update.callback_query is not None:
-        language = update.callback_query.from_user.language_code
-    else:
-        language = update.message.from_user.language_code
-
-    return language
-
-
 def get_user_id(update):
     if update.callback_query is not None:
         user_id = update.callback_query.from_user.id
@@ -391,17 +382,17 @@ def get_user_id(update):
 
 
 def get_config_session():
-    session = session_client.json_get('config')
+    session = session_client.json_get('git_config')
 
     if not session:
-        session_client.json_set('config', {})
-        session = session_client.json_get('config')
+        session_client.json_set('git_config', {})
+        session = session_client.json_get('git_config')
 
     return session
 
 
 def set_config_session(session):
-    session_client.json_set('config', session)
+    session_client.json_set('git_config', session)
 
 
 session_client = JsonRedis(host='localhost', port=6379, db=0)
