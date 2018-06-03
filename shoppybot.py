@@ -327,7 +327,7 @@ def on_menu(bot, update, user_data=None):
             elif data == 'menu_settings':
                 bot.edit_message_text(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
-                                      text='Settings',
+                                      text=_('⚙️ Settings'),
                                       reply_markup=create_admin_keyboard(),
                                       parse_mode=ParseMode.MARKDOWN, )
                 query.answer()
@@ -880,7 +880,7 @@ def on_settings_menu(bot, update):
     if data == 'settings_statistics':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Statistics',
+                              text=_('📈 Statistics'),
                               reply_markup=create_statistics_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -888,7 +888,7 @@ def on_settings_menu(bot, update):
     elif data == 'settings_bot':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Bot settings',
+                              text=_('⚙ Bot settings'),
                               reply_markup=create_bot_settings_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -921,7 +921,7 @@ def on_statistics_menu(bot, update):
     if data == 'statistics_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Settings',
+                              text=_('⚙️ Settings'),
                               reply_markup=create_admin_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -933,7 +933,7 @@ def on_statistics_menu(bot, update):
             Order.confirmed == True)
         for order_item in orders_items:
             total_price += order_item.count * order_item.total_price
-        message = 'Total confirmed orders count: {}, total cost: {}'.format(
+        message = _('Total confirmed orders\n\ncount: {}\ntotal cost: {}').format(
             orders_count, total_price)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -953,7 +953,7 @@ def on_statistics_menu(bot, update):
                 Order.confirmed == True, Order.courier == courier)
             for order_item in orders_items:
                 total_price += order_item.count * order_item.total_price
-            msg += '\nCourier: @{}, orders: {}, orders cost {}'.format(
+            msg += _('Courier: `@{}`\nOrders: {}, orders cost {}').format(
                 courier.username, orders_count, total_price)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -973,8 +973,9 @@ def on_statistics_menu(bot, update):
                 Order.confirmed == True, Order.location == location)
             for order_item in orders_items:
                 total_price += order_item.count * order_item.total_price
-            msg += '\nLocation: {}, orders: {}, orders cost {}'.format(
+            msg += _('Location: {}\nOrders: {}, orders cost {}').format(
                 location.title, orders_count, total_price)
+            msg += '\n\n'
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -991,7 +992,7 @@ def on_statistics_menu(bot, update):
             Order.confirmed == True, Order.date_created.year == now.year)
         for order_item in orders_items:
             total_price += order_item.count * order_item.total_price
-        msg = '\nOrders: {}, orders cost {}'.format(
+        msg = _('Orders: {}, orders cost {}').format(
             orders_count, total_price)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1009,7 +1010,7 @@ def on_statistics_menu(bot, update):
             Order.confirmed == True, Order.date_created.year == now.month)
         for order_item in orders_items:
             total_price += order_item.count * order_item.total_price
-        msg = '\nOrders: {}, orders cost {}'.format(
+        msg = _('Orders: {}, orders cost {}').format(
             orders_count, total_price)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1048,7 +1049,7 @@ def on_bot_settings_menu(bot, update):
     if data == 'bot_settings_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Settings',
+                              text=_('⚙️ Settings'),
                               reply_markup=create_admin_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -1056,7 +1057,7 @@ def on_bot_settings_menu(bot, update):
     elif data == 'bot_settings_couriers':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Couriers',
+                              text=_('🛵 Couriers'),
                               reply_markup=create_bot_couriers_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -1064,7 +1065,7 @@ def on_bot_settings_menu(bot, update):
     elif data == 'bot_settings_channels':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Channels',
+                              text=_('✉️ Channels'),
                               reply_markup=create_bot_channels_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -1072,14 +1073,14 @@ def on_bot_settings_menu(bot, update):
     elif data == 'bot_settings_order_options':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Order options',
+                              text=_('💳 Order options'),
                               reply_markup=create_bot_order_options_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_ORDER_OPTIONS
     elif data == 'bot_settings_edit_working_hours':
-        msg = 'Now: {}'.format(config.get_working_hours())
-        msg += '\nType new working hours'
+        msg = _('Now:\n\n`{}`\n\n').format(config.get_working_hours())
+        msg += _('Type new working hours')
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1096,8 +1097,8 @@ def on_bot_settings_menu(bot, update):
         query.answer()
         return ADMIN_BAN_LIST
     elif data == 'bot_settings_edit_contact_info':
-        msg = 'Now: {}'.format(config.get_contact_info())
-        msg += '\nType new contact info'
+        msg = _('Now:\n\n`{}`\n\n').format(config.get_contact_info())
+        msg += _('Type new contact info')
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1107,8 +1108,8 @@ def on_bot_settings_menu(bot, update):
         return ADMIN_EDIT_CONTACT_INFO
     elif data == 'bot_settings_bot_on_off':
         bot_status = config.get_bot_on_off()
-        bot_status = 'ON' if bot_status else 'OFF'
-        msg = 'Bot status: {}'.format(bot_status)
+        bot_status = _('ON') if bot_status else _('OFF')
+        msg = _('Bot status: {}').format(bot_status)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1135,7 +1136,7 @@ def on_admin_couriers(bot, update):
     if data == 'bot_couriers_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Bot settings',
+                              text=_('⚙ Bot settings'),
                               reply_markup=create_bot_settings_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -1146,9 +1147,12 @@ def on_admin_couriers(bot, update):
         for courier in couriers:
             locations = CourierLocation.filter(courier=courier)
             locations = [item.location.title for item in locations]
-            msg += 'name: @{}\nid: {}\ntelegram id: {}\nlocation: {}\n\n️'.format(
-                courier.username, courier.id, courier.telegram_id,
-                locations)
+            msg += _('name:\n`@{}`\n').format(courier.username)
+            msg += _('courier ID:\n`{}`\n').format(courier.id)
+            msg += _('telegram ID:\n`{}`\n').format(courier.telegram_id)
+            msg += _('locations:\n{}\n').format(locations)
+            # msg += _('locale:\n`{}`').format(courier.locale)
+            msg += '~~~~~~\n\n'
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1159,7 +1163,7 @@ def on_admin_couriers(bot, update):
     elif data == 'bot_couriers_add':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Enter new courier nickname',
+                              text=_('Enter new courier nickname'),
                               parse_mode=ParseMode.MARKDOWN,
                               reply_markup=create_back_button()
                               ),
@@ -1168,7 +1172,7 @@ def on_admin_couriers(bot, update):
     elif data == 'bot_couriers_delete':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Choose courier ID to delete',
+                              text=_('Choose courier ID to delete'),
                               parse_mode=ParseMode.MARKDOWN,
                               reply_markup=create_back_button()
                               )
@@ -1184,18 +1188,18 @@ def on_admin_channels(bot, update):
     if data == 'bot_channels_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Bot settings',
+                              text=_('⚙ Bot settings'),
                               reply_markup=create_bot_settings_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_BOT_SETTINGS
     elif data == 'bot_channels_view':
-        msg = u'Reviews channel: {}'.format(config.get_reviews_channel())
-        msg += u'\nService channel: {}'.format(config.get_service_channel())
-        msg += u'\nCustomer channel: {}'.format(config.get_customers_channel())
-        msg += u'\nVip customer channel: {}'.format(
+        # msg = u'Reviews channel: {}'.format(config.get_reviews_channel())
+        msg = _('Service channel ID:\n`{}`\n\n').format(config.get_service_channel())
+        msg += _('Customer channel:\n`@{}`\n\n').format(config.get_customers_channel())
+        msg += _('Vip customer channel ID:\n`{}`\n\n').format(
             config.get_vip_customers_channel())
-        msg += u'\nCourier channel: {}'.format(config.get_couriers_channel())
+        msg += _('Courier group ID:\n`{}`\n\n').format(config.get_couriers_channel())
 
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1205,11 +1209,11 @@ def on_admin_channels(bot, update):
         query.answer()
         return ADMIN_CHANNELS
     elif data == 'bot_channels_add':
-        types = ['Reviews', 'Service', 'Customer', 'Vip customer', 'Courier']
+        types = [_('Service'), _('Customer'), _('Vip Customer'), _('Courier')]
         msg = ''
         for i, channel_type in enumerate(types, start=1):
             msg += '\n{} - {}'.format(i, channel_type)
-        msg += '\nSelect channel type'
+        msg += _('\n\nSelect channel type')
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1219,11 +1223,11 @@ def on_admin_channels(bot, update):
 
         return ADMIN_CHANNELS_SELECT_TYPE
     elif data == 'bot_channels_remove':
-        types = ['Reviews', 'Service', 'Customer', 'Vip customer', 'Courier']
+        types = [_('Service'), _('Customer'), _('Vip Customer'), _('Courier')]
         msg = ''
         for i, channel_type in enumerate(types, start=1):
             msg += '\n{} - {}'.format(i, channel_type)
-        msg += '\nSelect channel type'
+        msg += _('\n\nSelect channel type')
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -1242,7 +1246,7 @@ def on_admin_ban_list(bot, update):
     if data == 'bot_ban_list_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Bot settings',
+                              text=_('⚙ Bot settings'),
                               reply_markup=create_bot_settings_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()

@@ -100,8 +100,8 @@ msgid "<b>Delivery Fee: {}$</b>"
 msgstr "<b>דמי משלוח: {}₪</b>"
 
 #: shoppybot.py:129
-msgid "for orders blow 500$"
-msgstr "להזמנות מתחת ל500₪"
+msgid "for orders blow below {}$"
+msgstr "להזמנות מתחת ל{}₪"
 
 #: shoppybot.py:133
 msgid "Price:"
@@ -552,7 +552,7 @@ msgstr "בחר אזורי פעילות לשליח"
 
 #: admin.py:130
 msgid "Enter delivery fee:\nOnly works on delivery\n\nCurrent fee: {}"
-msgstr "הכנס דמי משלוח\nעובד רק אם יש אפשרות למשלוח\n\nדמי משלוח כרגע: {}"
+msgstr "הכנס דמי משלוח\nעובד רק אם יש אפשרות למשלוח\nדוגמא: 500 < 50\n\nדמי משלוח כרגע: {}"
 
 #: admin.py:169
 msgid "Type new welcome message.\n"
