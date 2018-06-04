@@ -510,22 +510,26 @@ def on_shipping_method(bot, update, user_data):
     user_data = get_user_session(user_id)
     if key == BUTTON_TEXT_CANCEL:
         return enter_state_init_order_cancelled(bot, update, user_data)
-    else:
+    elif key == BUTTON_TEXT_PICKUP or key == BUTTON_TEXT_DELIVERY:
         user_data['shipping']['method'] = key
         session_client.json_set(user_id, user_data)
         return enter_state_courier_location(bot, update, user_data)
+    else:
+        return enter_state_shipping_method(bot, update, user_data)
 
 
 def on_shipping_pickup_location(bot, update, user_data):
     key = update.message.text
     user_id = get_user_id(update)
     user_data = get_user_session(user_id)
+    locations = Location.select()
+    location_names = [x.title for x in locations]
 
     if key == BUTTON_TEXT_BACK:
         return enter_state_shipping_method(bot, update, user_data)
     elif key == BUTTON_TEXT_CANCEL:
         return enter_state_init_order_cancelled(bot, update, user_data)
-    else:
+    elif any(key in s for s in location_names):
         user_data['shipping']['pickup_location'] = key
         session_client.json_set(user_id, user_data)
 
@@ -533,6 +537,8 @@ def on_shipping_pickup_location(bot, update, user_data):
             return enter_state_location_delivery(bot, update, user_data)
         else:
             return enter_state_shipping_time(bot, update, user_data)
+    else:
+        return enter_state_courier_location(bot, update, user_data)
 
 
 def on_shipping_delivery_address(bot, update, user_data):
@@ -585,6 +591,7 @@ def on_checkout_time(bot, update, user_data):
         return enter_state_shipping_time_text(bot, update, user_data)
     else:
         logger.warn("Unknown input %s", key)
+        return enter_state_shipping_time(bot, update, user_data)
 
 
 def on_shipping_time_text(bot, update, user_data):
