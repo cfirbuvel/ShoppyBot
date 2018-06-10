@@ -1,6 +1,4 @@
 import io
-import logging
-import sys
 
 from telegram import ParseMode, Message, CallbackQuery
 from telegram import ReplyKeyboardRemove
@@ -8,6 +6,7 @@ from telegram.error import TelegramError
 from telegram.ext import ConversationHandler
 
 from .enums import *
+from .enums import _
 from .helpers import ConfigHelper, session_client, get_config_session, \
     get_user_session, get_user_id, set_config_session
 from .models import Product, ProductCount, Courier, Location, CourierLocation
@@ -15,22 +14,6 @@ from .keyboards import create_bot_config_keyboard, create_back_button, \
     create_bot_couriers_keyboard, create_bot_channels_keyboard, \
     create_bot_settings_keyboard, create_bot_order_options_keyboard, \
     create_ban_list_keyboard, create_courier_locations_keyboard
-
-DEBUG = os.environ.get('DEBUG')
-cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-
-_ = gettext.gettext
-if not DEBUG:
-    _ = cat.gettext
-
-
-logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
-if DEBUG:
-    config = ConfigHelper(cfgfilename='test_conf.conf')
-else:
-    config = ConfigHelper()
 
 
 def is_admin(bot, user_id):
@@ -60,7 +43,7 @@ def on_start_admin(bot, update):
 
 def on_admin_cmd_add_product(bot, update):
     update.message.reply_text(
-        text='Enter new product title',
+        text=_('Enter new product title'),
         reply_markup=ReplyKeyboardRemove(),
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -73,7 +56,7 @@ def on_admin_order_options(bot, update):
     if data == 'bot_order_options_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Bot settings',
+                              text=_('⚙ Bot settings'),
                               reply_markup=create_bot_settings_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -82,7 +65,7 @@ def on_admin_order_options(bot, update):
         bot.edit_message_text(
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
-            text='Enter new product title',
+            text=_('Enter new product title'),
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=create_back_button(),
         )
@@ -98,7 +81,7 @@ def on_admin_order_options(bot, update):
                                   parse_mode=ParseMode.MARKDOWN)
             return ADMIN_ORDER_OPTIONS
         else:
-            text = 'Choose product ID to delete:'
+            text = _('Choose product ID to delete:')
             for product in products:
                 text += '\n'
                 text += '{}. {}'.format(product.id, product.title)
@@ -127,10 +110,7 @@ def on_admin_order_options(bot, update):
         bot.edit_message_text(
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
-            text=('Enter delivery fee like:\n'
-                  '50 > 500: all deals above 500$ no fee\n'
-                  'if 0: all the deals have no fee\n'
-                  'Current fee: {}'.format(config.get_delivery_fee())),
+            text=(_('Enter delivery fee:\nOnly works on delivery\n\nCurrent fee: {}').format(config.get_delivery_fee())),
             reply_markup=create_back_button(),
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -169,8 +149,8 @@ def on_admin_order_options(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_EDIT_RESTRICTION
     elif data == 'bot_order_options_welcome':
-        msg = 'Type new welcome message.\n' \
-              'Current message: {}'.format(config.get_welcome_text())
+        msg = _('Type new welcome message.\n')
+        msg += _('Current message:\n\n{}').format(config.get_welcome_text())
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -178,8 +158,8 @@ def on_admin_order_options(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_EDIT_WELCOME_MESSAGE
     elif data == 'bot_order_options_details':
-        msg = 'Type new order details message.\n' \
-              'Current message: {}'.format(config.get_order_text())
+        msg = _('Type new order details message.\n')
+        msg += _('Current message:\n\n{}').format(config.get_order_text())
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -187,8 +167,8 @@ def on_admin_order_options(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_EDIT_ORDER_DETAILS
     elif data == 'bot_order_options_final':
-        msg = 'Type new final message.\n' \
-              'Current message: {}'.format(config.get_order_complete_text())
+        msg = _('Type new final message.\n')
+        msg += _('Current message:\n\n{}').format(config.get_order_complete_text())
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -204,7 +184,7 @@ def on_admin_txt_product_title(bot, update, user_data):
         query = update.callback_query
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Order options',
+                              text=_('💳 Order options'),
                               reply_markup=create_bot_order_options_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_ORDER_OPTIONS
@@ -214,8 +194,7 @@ def on_admin_txt_product_title(bot, update, user_data):
     user_data['add_product'] = {}
     user_data['add_product']['title'] = title
     update.message.reply_text(
-        text='Enter new product prices one per line in the format *COUNT '
-             'PRICE*, e.g. *1 10.0*',
+        text=_('Enter new product prices\none per line in the format\n*COUNT PRICE*, e.g. *1 10*'),
         reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN,
     )
     return ADMIN_TXT_PRODUCT_PRICES
@@ -239,7 +218,7 @@ def on_admin_txt_product_prices(bot, update, user_data):
 
     user_data['add_product']['prices'] = prices_list
     update.message.reply_text(
-        text='Send the new product photo',
+        text=_('Send the new product photo'),
         reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.MARKDOWN,
     )
     return ADMIN_TXT_PRODUCT_PHOTO
@@ -262,7 +241,7 @@ def on_admin_txt_product_photo(bot, update, user_data):
     del user_data['add_product']
 
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Product created',
+                     text=_('New Product Created\n✅'),
                      reply_markup=create_bot_order_options_keyboard(),
                      parse_mode=ParseMode.MARKDOWN)
     return ADMIN_ORDER_OPTIONS
@@ -274,7 +253,7 @@ def on_admin_cmd_delete_product(bot, update):
         update.message.reply_text(text='No products to delete')
         return ADMIN_INIT
     else:
-        text = 'Choose product ID to delete:'
+        text = _('Choose product ID to delete:')
         for product in products:
             text += '\n'
             text += '{}. {}'.format(product.id, product.title)
@@ -297,12 +276,12 @@ def on_admin_cmd_bot_off(bot, update):
 
 
 def on_admin_cmd_add_courier(bot, update):
-    update.message.reply_text(text='Enter new courier nickname')
+    update.message.reply_text(text=_('Enter new courier nickname'))
     return ADMIN_TXT_COURIER_NAME
 
 
 def on_admin_cmd_delete_courier(bot, update):
-    text = 'Choose courier ID to delete:'
+    text = _('Choose courier ID to delete:')
 
     for courier in Courier.select():
         text += '\n'
@@ -317,7 +296,7 @@ def on_admin_txt_delete_product(bot, update, user_data):
         query = update.callback_query
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Order options',
+                              text=_('💳 Order options'),
                               reply_markup=create_bot_order_options_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_ORDER_OPTIONS
@@ -329,10 +308,10 @@ def on_admin_txt_delete_product(bot, update, user_data):
         product.is_active = False
         product.save()
         update.message.reply_text(
-            text='Product {} - {} was deleted'.format(product_id, product_title))
+            text=_('Product {} - {} was deleted').format(product_id, product_title))
         logger.info('Product %s - %s was deleted', product_id, product_title)
         update.message.reply_text(
-            text='Order options',
+            text=_('💳 Order options'),
             reply_markup=create_bot_order_options_keyboard(),
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -348,7 +327,7 @@ def on_admin_txt_courier_name(bot, update, user_data):
         query = update.callback_query
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Couriers',
+                              text=_('🛵 Couriers'),
                               reply_markup=create_bot_couriers_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_COURIERS
@@ -357,7 +336,7 @@ def on_admin_txt_courier_name(bot, update, user_data):
     # initialize new courier data
     user_data['add_courier'] = {}
     user_data['add_courier']['name'] = name
-    text = 'Enter courier telegram_id'
+    text = _('Enter courier telegram_id')
     update.message.reply_text(text=text)
     return ADMIN_TXT_COURIER_ID
 
@@ -369,7 +348,7 @@ def on_admin_txt_courier_id(bot, update, user_data):
         user_data['add_courier']['location_ids'] = []
     location_ids = user_data['add_courier']['location_ids']
 
-    text = 'Choose locations for new courier'
+    text = _('Choose locations for new courier')
     locations = []
     for location in Location:
         is_picked = False
@@ -404,13 +383,13 @@ def on_admin_btn_courier_location(bot, update, user_data):
             # clear new courier data
             del user_data['add_courier']
             bot.send_message(chat_id=query.message.chat_id,
-                             text='Courier added',
+                             text=_('Courier added'),
                              reply_markup=create_bot_couriers_keyboard(),
                              parse_mode=ParseMode.MARKDOWN)
             return ADMIN_COURIERS
 
         bot.send_message(chat_id=query.message.chat_id,
-                         text='Couriers',
+                         text=_('🛵 Couriers'),
                          reply_markup=create_bot_couriers_keyboard(),
                          parse_mode=ParseMode.MARKDOWN)
 
@@ -447,7 +426,7 @@ def on_admin_txt_delete_courier(bot, update, user_data):
         query = update.callback_query
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Couriers',
+                              text=_('🛵 Couriers'),
                               reply_markup=create_bot_couriers_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_COURIERS
@@ -464,7 +443,7 @@ def on_admin_txt_delete_courier(bot, update, user_data):
 
     courier.delete_instance()
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Courier deleted',
+                     text=_('Courier deleted'),
                      reply_markup=create_bot_couriers_keyboard(),
                      parse_mode=ParseMode.MARKDOWN)
     return ADMIN_COURIERS
@@ -507,7 +486,7 @@ def on_admin_select_channel_type(bot, update, user_data):
         query = update.callback_query
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Channels',
+                              text=_('✉️ Channels'),
                               reply_markup=create_bot_channels_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_CHANNELS
@@ -546,7 +525,7 @@ def on_admin_add_channel_address(bot, update, user_data):
     set_config_session(config_session)
     user_data['add_channel'] = {}
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Channels',
+                     text=_('✉️ Channels'),
                      reply_markup=create_bot_channels_keyboard(),
                      parse_mode=ParseMode.MARKDOWN)
     return ADMIN_CHANNELS
@@ -557,7 +536,7 @@ def on_admin_remove_channel(bot, update, user_data):
         query = update.callback_query
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text='Channels',
+                              text=_('✉️ Channels'),
                               reply_markup=create_bot_channels_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         return ADMIN_CHANNELS

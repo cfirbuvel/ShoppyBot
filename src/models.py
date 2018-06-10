@@ -5,7 +5,7 @@ from peewee import Model, CharField, IntegerField, SqliteDatabase, \
     ForeignKeyField, DecimalField, BlobField, BooleanField, DateField
 
 d = dirname(dirname(abspath(__file__)))
-db = SqliteDatabase(join(d, 'shoppybot_db.sqlite'))
+db = SqliteDatabase(join(d, 'db.sqlite'))
 
 
 class DeliveryMethod(Enum):
@@ -23,10 +23,21 @@ class Location(BaseModel):
 
 
 class User(BaseModel):
+    # HEBREW = 'iw-IL'
+    # ENGLISH = 'en-GB'
+    # language_choices = (
+    #     (HEBREW, 'Hebrew'),
+    #     (ENGLISH, 'English'),
+    # )
     username = CharField()
     telegram_id = IntegerField()
-    locale = CharField(max_length=4, default="he")
+    # locale = CharField(max_length=4, choices=language_choices)
     phone_number = CharField(null=True)
+
+    # def save(self, force_insert=False, only=None):
+    #     if self.locale not in (self.HEBREW, self.ENGLISH):
+    #         self.locale = self.HEBREW
+    #         super().save(force_insert=force_insert, only=only)
 
 
 class Courier(User):

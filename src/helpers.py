@@ -2,7 +2,15 @@ import configparser
 import redis
 import json
 
-from .models import ProductCount, Product, Order, OrderItem, Courier
+from .models import ProductCount, Product, User, OrderItem, Courier
+
+
+# def set_locale(f):
+#     def wrapped(*args, **kwargs):
+#         self = kwargs['self']
+#         self.append('locale', self.locale)
+#         f(*args, **kwargs)
+#     return wrapped
 
 
 class JsonRedis(redis.StrictRedis):
@@ -13,6 +21,7 @@ class JsonRedis(redis.StrictRedis):
             value = json.loads(value.decode("utf-8"))
         return value
 
+    # @set_locale
     def json_set(self, name, value):
         value = json.dumps(value)
         return self.set(name, value)
@@ -164,7 +173,7 @@ class ConfigHelper:
         value = get_config_session().get('delivery_fee')
         if value is None:
             value = self.config.get(self.section, 'delivery_fee')
-        return int(value.strip())
+        return int(value)
 
     def get_delivery_min(self):
         value = get_config_session().get('delivery_min')
@@ -340,7 +349,8 @@ def get_user_session(user_id):
     updated = False
 
     if not user_session:
-        session_client.json_set(user_id, {})
+        user = User.get(telegram_id=user_id)
+        session_client.json_set(user_id, {'locale': user.locale})
         user_session = session_client.json_get(user_id)
 
     if not user_session.get('cart'):
@@ -391,17 +401,17 @@ def get_user_id(update):
 
 
 def get_config_session():
-    session = session_client.json_get('config')
+    session = session_client.json_get('git_config')
 
     if not session:
-        session_client.json_set('config', {})
-        session = session_client.json_get('config')
+        session_client.json_set('git_config', {})
+        session = session_client.json_get('git_config')
 
     return session
 
 
 def set_config_session(session):
-    session_client.json_set('config', session)
+    session_client.json_set('git_config', session)
 
 
 session_client = JsonRedis(host='localhost', port=6379, db=0)
