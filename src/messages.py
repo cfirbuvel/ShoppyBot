@@ -55,7 +55,7 @@ def create_confirmation_text(is_pickup, shipping_data, total, delivery_min, deli
         if key == 'vip':
             is_vip = True
 
-    if total < delivery_min:
+    if total < delivery_cost:
         if is_pickup:
             text += '\n\n'
             text += _('Total: <b>${}</b>').format(total)

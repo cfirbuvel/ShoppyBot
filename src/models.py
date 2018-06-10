@@ -1,5 +1,5 @@
 import datetime
-from os.path import dirname, abspath, join
+from os.path import dirname, abspath
 from enum import Enum
 from peewee import Model, CharField, IntegerField, SqliteDatabase, \
     ForeignKeyField, DecimalField, BlobField, BooleanField, DateField
@@ -31,7 +31,7 @@ class User(BaseModel):
     # )
     username = CharField()
     telegram_id = IntegerField()
-    # locale = CharField(max_length=4, choices=language_choices)
+    locale = CharField(max_length=4, choices=language_choices)
     phone_number = CharField(null=True)
 
     # def save(self, force_insert=False, only=None):

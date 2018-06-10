@@ -164,11 +164,10 @@ def make_unconfirm(bot, update, user_data):
 def on_start(bot, update, user_data):
     user_id = get_user_id(update)
     username = get_username(update)
-    language = get_locale(update)
     try:
         user = User.get(telegram_id=user_id)
     except User.DoesNotExist:
-        user = User(telegram_id=user_id, username=username, locale=language)
+        user = User(telegram_id=user_id, username=username)
         user.save()
     BOT_ON = config.get_bot_on_off() and username not in config.get_banned_users()
     if BOT_ON or is_admin(bot, user_id):
@@ -516,6 +515,9 @@ def on_shipping_method(bot, update, user_data):
         user_data['shipping']['method'] = key
         session_client.json_set(user_id, user_data)
         return enter_state_courier_location(bot, update, user_data)
+    else:
+        return enter_state_shipping_method(bot, update, user_data)
+
 
 
 def on_bot_language_change(bot, update, user_data):
@@ -535,8 +537,7 @@ def on_bot_language_change(bot, update, user_data):
                           parse_mode=ParseMode.MARKDOWN)
     query.answer()
     return ADMIN_BOT_SETTINGS
-
-
+    
 def on_shipping_pickup_location(bot, update, user_data):
     key = update.message.text
     user_id = get_user_id(update)
@@ -1072,7 +1073,7 @@ def on_bot_settings_menu(bot, update):
     if data == 'bot_settings_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
-                              text=_('⚙  Settings'),
+                              text=_('⚙️ Settings'),
                               reply_markup=create_admin_keyboard(),
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
@@ -1150,7 +1151,7 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_BOT_ON_OFF
-
+    
     elif data == 'bot_settings_reset_all_data':
         set_config_session({})
         bot.edit_message_text(chat_id=query.message.chat_id,

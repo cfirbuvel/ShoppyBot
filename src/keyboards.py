@@ -130,6 +130,7 @@ def create_main_keyboard(review_channel, is_admin=None, total_price=0):
     return InlineKeyboardMarkup(main_button_list)
 
 
+<<<<<<< HEAD
 def create_bot_language_keyboard():
     keyboard = [
         [InlineKeyboardButton(
@@ -140,6 +141,8 @@ def create_bot_language_keyboard():
     return InlineKeyboardMarkup(keyboard, resize_keyboard=True)
 
 
+=======
+>>>>>>> f6538122448b694bf81e63a4b0db0fc00c966ff9
 def create_product_keyboard(product_id, user_data, cart):
     button_row = []
 
@@ -222,8 +225,6 @@ def create_bot_settings_keyboard():
                               callback_data='bot_settings_edit_contact_info')],
         [InlineKeyboardButton(_('⚡️ Bot ON/OFF'),
                               callback_data='bot_settings_bot_on_off')],
-        [InlineKeyboardButton(_('🈚︎   Bot Language'),
-                              callback_data='bot_settings_bot_language')],
         [InlineKeyboardButton(_('💫 Reset all data'),
                               callback_data='bot_settings_reset_all_data')],
         [InlineKeyboardButton(_('↩ Back'),
