@@ -2,7 +2,8 @@
 import random
 import datetime
 
-from telegram.ext import CallbackQueryHandler, CommandHandler,\
+from telegram import InputMediaPhoto
+from telegram.ext import CallbackQueryHandler, CommandHandler, \
     ConversationHandler, Filters, MessageHandler, Updater, BaseFilter
 
 from src.admin import *
@@ -19,7 +20,8 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_admin_keyboard, create_statistics_keyboard, \
     create_bot_settings_keyboard, create_bot_couriers_keyboard, \
     create_bot_channels_keyboard, create_bot_order_options_keyboard, \
-    create_back_button, create_on_off_buttons, create_ban_list_keyboard
+    create_back_button, create_on_off_buttons, create_ban_list_keyboard, create_service_channel_keyboard, \
+    create_bot_locations_keyboard, create_locations_keyboard
 from src.models import create_tables, User, Courier, Order, OrderItem, \
     Product, ProductCount
 
@@ -131,7 +133,7 @@ def make_confirm(bot, update, user_data):
         user_id = order.user.telegram_id
         bot.send_message(
             user_id,
-            text=_('Courier @{} assigned to your order').format(courier_name),
+            text=_('Courier @{} assigned for order № {}').format(courier_name, order_id),
             parse_mode=ParseMode.HTML,
         )
 
@@ -175,6 +177,16 @@ def on_start(bot, update, user_data):
             logger.info('Starting session for user %s, language: %s',
                         update.message.from_user.id,
                         update.message.from_user.language_code)
+
+            # TODO: Send photo with caption and the keyboard
+            photo_link = 'https://2.bp.blogspot.com/-XZN2TA7nQZ0/WGSL3ia76KI/AAAAAAAAGuE' \
+                         '/8pxmxtrizn8Yu1Y6iIArXYBgsL3Rhww3ACLcB/s1600/telegram-bot.png '
+            bot.send_photo(
+                chat_id=update.message.chat_id,
+                photo=photo_link,
+                caption=config.get_welcome_text().format(
+                    update.message.from_user.first_name),
+            )
             update.message.reply_text(
                 text=config.get_welcome_text().format(
                     update.message.from_user.first_name),
@@ -297,8 +309,8 @@ def on_menu(bot, update, user_data=None):
                 bot.edit_message_text(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
                                       text=create_product_description(
-                                             product_title, prices,
-                                             product_count, subtotal,
+                                          product_title, prices,
+                                          product_count, subtotal,
                                           delivery_min, delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
@@ -318,9 +330,9 @@ def on_menu(bot, update, user_data=None):
                 bot.edit_message_text(chat_id=query.message.chat_id,
                                       message_id=query.message.message_id,
                                       text=create_product_description(
-                                             product_title, prices,
-                                             product_count, subtotal,
-                                             delivery_min, delivery_fee),
+                                          product_title, prices,
+                                          product_count, subtotal,
+                                          delivery_min, delivery_fee),
                                       reply_markup=create_product_keyboard(
                                           product_id, user_data, cart),
                                       parse_mode=ParseMode.HTML, )
@@ -498,6 +510,7 @@ def enter_state_init_order_cancelled(bot, update, user_data):
                          config.get_reviews_channel(), is_admin(bot, user_id),
                          total))
     return BOT_STATE_INIT
+
 
 #
 # confirmation handlers
@@ -715,6 +728,20 @@ def on_confirm_order(bot, update, user_data):
         total = cart.get_cart_total(user_data)
         delivery_cost = config.get_delivery_fee()
         delivery_min = config.get_delivery_min()
+
+        # Test New Keyboard
+
+        # is_vip = False
+        # show_order = False
+        # if is_vip_customer(bot, user_id):
+        #     is_vip = True
+        # bot.send_message(config.get_service_channel(),
+        #                  text=_('Order confirmed from (@{}), order id {}').format(
+        #                      update.message.from_user.username, order_id),
+        #                  parse_mode=ParseMode.MARKDOWN,
+        #                  reply_markup=create_service_channel_keyboard(order_id, show_order, is_vip)
+        #                  )
+
         # ORDER CONFIRMED, send the details to service channel
         bot.send_message(config.get_service_channel(),
                          text=_('Order confirmed from (@{})').format(
@@ -864,7 +891,7 @@ def service_channel_courier_query_handler(bot, update, user_data):
                     text='{} your location and customer locations are '
                          'different'.format(courier_nickname),
                     parse_mode=ParseMode.HTML
-                                 )
+                )
 
 
 def send_welcome_message(bot, update):
@@ -1137,6 +1164,52 @@ def on_bot_settings_menu(bot, update):
     return ConversationHandler.END
 
 
+def on_admin_locations(bot, update):
+    query = update.callback_query
+    data = query.data
+    if data == 'bot_locations_back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=_('💳 Order options'),
+                              reply_markup=create_bot_order_options_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_ORDER_OPTIONS
+    elif data == 'bot_locations_view':
+        locations = Location.select()
+        location_names = [x.title for x in locations]
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=_('Your locations:\n\n{}').format(location_names),
+                              reply_markup=create_bot_locations_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_LOCATIONS
+    elif data == 'bot_locations_add':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=_('Enter new location'),
+                              parse_mode=ParseMode.MARKDOWN,
+                              reply_markup=create_back_button()
+                              ),
+        query.answer()
+        return ADMIN_TXT_ADD_LOCATION
+    elif data == 'bot_locations_delete':
+        locations = Location.select()
+        location_names = [x.title for x in locations]
+
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=_('Choose location to delete'),
+                              parse_mode=ParseMode.MARKDOWN,
+                              reply_markup=create_locations_keyboard(location_names)
+                              )
+        query.answer()
+        return ADMIN_TXT_DELETE_LOCATION
+
+    return ConversationHandler.END
+
+
 def on_admin_couriers(bot, update):
     query = update.callback_query
     data = query.data
@@ -1372,6 +1445,9 @@ def main():
             ADMIN_COURIERS: [
                 CallbackQueryHandler(
                     on_admin_couriers, pattern='^bot_couriers')],
+            ADMIN_LOCATIONS: [
+                CallbackQueryHandler(
+                    on_admin_locations, pattern='^bot_locations')],
             ADMIN_CHANNELS: [
                 CallbackQueryHandler(on_admin_channels, pattern='^bot_channels')
             ],
@@ -1521,6 +1597,20 @@ def main():
                 CallbackQueryHandler(
                     on_admin_txt_courier_name, pass_user_data=True),
                 MessageHandler(Filters.text, on_admin_txt_courier_name,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_TXT_ADD_LOCATION: [
+                CallbackQueryHandler(
+                    on_admin_txt_location, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_txt_location,
+                               pass_user_data=True),
+                CommandHandler('cancel', on_admin_cancel),
+            ],
+            ADMIN_TXT_DELETE_LOCATION: [
+                CallbackQueryHandler(
+                    on_admin_txt_delete_location, pass_user_data=True),
+                MessageHandler(Filters.text, on_admin_txt_delete_location,
                                pass_user_data=True),
                 CommandHandler('cancel', on_admin_cancel),
             ],

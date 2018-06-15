@@ -50,6 +50,19 @@ def create_cancel_keyboard():
     return ReplyKeyboardMarkup(button_row, resize_keyboard=True)
 
 
+def create_locations_keyboard(location_names):
+    button_row = []
+    for location_name in location_names:
+        button_row.append([InlineKeyboardButton(_(location_name),
+                          callback_data=location_name)])
+    back_button = InlineKeyboardButton(_(BUTTON_TEXT_BACK),
+                                       callback_data='back')
+    cancel_button = InlineKeyboardButton(_(BUTTON_TEXT_CANCEL),
+                                         callback_data='back')
+    button_row.append([back_button, cancel_button])
+    return InlineKeyboardMarkup(button_row)
+
+
 def create_pickup_location_keyboard(location_names):
     button_column = []
     for location_name in location_names:
@@ -91,6 +104,16 @@ def create_courier_confirmation_keyboard(order_id, courier_name):
         InlineKeyboardButton(_('No'),
                              callback_data='notconfirmed|{}|{}'.format(
                                  order_id, courier_name)),
+    ]
+    return InlineKeyboardMarkup([buttons])
+
+
+def create_confirmation_inline_keyboard():
+    buttons = [
+        InlineKeyboardButton(_('Yes'),
+                             callback_data='yes'),
+        InlineKeyboardButton(_('No'),
+                             callback_data='no'),
     ]
     return InlineKeyboardMarkup([buttons])
 
@@ -245,6 +268,21 @@ def create_bot_channels_keyboard():
     return InlineKeyboardMarkup(main_button_list)
 
 
+def create_bot_locations_keyboard():
+    main_button_list = [
+        [InlineKeyboardButton(_('🎯️ View locations'),
+                              callback_data='bot_locations_view')],
+        [InlineKeyboardButton(_('➕ Add location'),
+                              callback_data='bot_locations_add')],
+        [InlineKeyboardButton(_('➖ Remove location'),
+                              callback_data='bot_locations_delete')],
+        [InlineKeyboardButton(_('↩ Back'),
+                              callback_data='bot_locations_back')],
+    ]
+
+    return InlineKeyboardMarkup(main_button_list)
+
+
 def create_bot_order_options_keyboard():
     main_button_list = [
         [InlineKeyboardButton(_('➕️ Add new product'),
@@ -255,6 +293,8 @@ def create_bot_order_options_keyboard():
                               callback_data='bot_order_options_discount')],
         [InlineKeyboardButton(_('➕ Add delivery fee'),
                               callback_data='bot_order_options_delivery_fee')],
+        [InlineKeyboardButton(_('🎯 locations'),
+                              callback_data='bot_order_options_add_locations')],
         [InlineKeyboardButton(_('👨‍ Edit identify process'),
                               callback_data='bot_order_options_identify')],
         [InlineKeyboardButton(_('🔥 Edit Restricted area'),
@@ -299,6 +339,30 @@ def create_ban_list_keyboard():
     ]
 
     return InlineKeyboardMarkup(main_button_list)
+
+
+def create_service_channel_keyboard(order_id, show_order, is_vip):
+    if show_order:
+        main_button_list = [
+            [InlineKeyboardButton(_('🛵 Send order to courier channel'),
+                                  callback_data='admin_send_order_to_courier_channel')],
+            [InlineKeyboardButton(_('🚀 Send order to specific courier'),
+                                  callback_data='admin_send_order_to_courier')],
+            [InlineKeyboardButton(_('🚕 Send order yourself'),
+                                  callback_data='admin_send_order_to_self')],
+            [InlineKeyboardButton(_('⭐ Add user to VIP {}').format(is_vip),
+                                  callback_data='admin_add_client_to_vip')],
+            [InlineKeyboardButton(_('🔥 Add client to ban-list'),
+                                  callback_data='admin_add_client_to_ban_list')],
+            [InlineKeyboardButton(_('💳 Hide Order №{}').format(order_id),
+                                  callback_data='admin_hide_order')],
+            [InlineKeyboardButton(_('✅ Order Finished'),
+                                  callback_data='admin_mark_order_finished')],
+        ]
+        return InlineKeyboardMarkup(main_button_list)
+    else:
+        return InlineKeyboardMarkup([[InlineKeyboardButton(_('Show Order №{}').format(order_id),
+                                                           callback_data='admin_show_order')]])
 
 
 def create_courier_locations_keyboard(locations):

@@ -14,7 +14,7 @@ from .models import Product, ProductCount, Courier, Location, CourierLocation
 from .keyboards import create_bot_config_keyboard, create_back_button, \
     create_bot_couriers_keyboard, create_bot_channels_keyboard, \
     create_bot_settings_keyboard, create_bot_order_options_keyboard, \
-    create_ban_list_keyboard, create_courier_locations_keyboard
+    create_ban_list_keyboard, create_courier_locations_keyboard, create_bot_locations_keyboard
 
 DEBUG = os.environ.get('DEBUG')
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
@@ -22,7 +22,6 @@ cat = gettext.GNUTranslations(open('he.mo', 'rb'))
 _ = gettext.gettext
 if not DEBUG:
     _ = cat.gettext
-
 
 logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
                     level=logging.INFO)
@@ -127,12 +126,20 @@ def on_admin_order_options(bot, update):
         bot.edit_message_text(
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
-            text=(_('Enter delivery fee:\nOnly works on delivery\n\nCurrent fee: {}').format(config.get_delivery_fee())),
+            text=_('Enter delivery fee:\nOnly works on delivery\n\nCurrent fee: {}').format(config.get_delivery_fee()),
             reply_markup=create_back_button(),
             parse_mode=ParseMode.MARKDOWN,
         )
         query.answer()
         return ADMIN_ADD_DELIVERY_FEE
+    elif data == 'bot_order_options_add_locations':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=_('🎯 Locations'),
+                              reply_markup=create_bot_locations_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        query.answer()
+        return ADMIN_LOCATIONS
     elif data == 'bot_order_options_identify':
         first = config.get_identification_required()
         second = config.get_identification_stage2_required()
@@ -158,7 +165,7 @@ def on_admin_order_options(bot, update):
         msg = 'Only for customers option: {}\n' \
               'Vip customers option: {}\n' \
               'Type new rules: 0/1 0/1 (customers, vip customers)'.format(
-                only_for_customers, only_for_vip_customers)
+            only_for_customers, only_for_vip_customers)
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=msg,
@@ -339,6 +346,68 @@ def on_admin_txt_delete_product(bot, update, user_data):
         return ADMIN_TXT_DELETE_PRODUCT
 
 
+def on_admin_txt_location(bot, update, user_data):
+    query = update.callback_query
+    if update.callback_query and query.callback_query.data == 'back':
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=_('🎯 Locations'),
+                              reply_markup=create_bot_locations_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_LOCATIONS
+
+    location_user_txt = update.message.text
+    # initialize new Location data
+    user_data['add_location'] = {}
+    user_data['add_location']['title'] = location_user_txt
+    try:
+        # Check if location exists
+        Location.get(title=location_user_txt)
+        update.message.reply_text(text='Location: `{}` '
+                                       'already added'.format(location_user_txt),
+                                  reply_markup=create_bot_locations_keyboard(),
+                                  parse_mode=ParseMode.MARKDOWN
+                                  )
+        return ADMIN_LOCATIONS
+
+    except Location.DoesNotExist:
+        Location.create(title=location_user_txt)
+
+        del user_data['add_location']
+        bot.send_message(chat_id=update.message.chat_id,
+                         message_id=update.message.message_id,
+                         text=_('new location added'),
+                         reply_markup=create_bot_locations_keyboard(),
+                         parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_LOCATIONS
+
+
+def on_admin_txt_delete_location(bot, update, user_data):
+    if update.callback_query and update.callback_query.data == 'back':
+        query = update.callback_query
+        bot.edit_message_text(chat_id=query.message.chat_id,
+                              message_id=query.message.message_id,
+                              text=_('🎯 Locations'),
+                              reply_markup=create_bot_locations_keyboard(),
+                              parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_LOCATIONS
+    lct = update.callback_query.data
+    try:
+        location = Location.get(title=lct)
+        location.delete_instance()
+    except Location.DoesNotExist:
+        update.message.reply_text(
+            text='Invalid Location title, please enter correct title')
+        return ADMIN_TXT_DELETE_LOCATION
+
+    query = update.callback_query
+    bot.send_message(chat_id=query.message.chat_id,
+                     text='Location deleted',
+                     reply_markup=create_bot_locations_keyboard(),
+                     parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_LOCATIONS
+
+
 def on_admin_txt_courier_name(bot, update, user_data):
     if update.callback_query and update.callback_query.data == 'back':
         query = update.callback_query
@@ -392,7 +461,7 @@ def on_admin_btn_courier_location(bot, update, user_data):
         try:
             Courier.get(username=username, telegram_id=telegram_id)
             query.message.reply_text(text='Courier with username @{} '
-                                           'already added'.format(username))
+                                          'already added'.format(username))
         except Courier.DoesNotExist:
             courier = Courier.create(username=username, telegram_id=telegram_id)
             for location in locations:
