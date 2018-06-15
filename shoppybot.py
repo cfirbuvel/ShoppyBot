@@ -10,7 +10,7 @@ from src.admin import *
 from src.enums import *
 from src.messages import create_confirmation_text, create_product_description, \
     create_service_notice
-from src.helpers import CartHelper, session_client, get_user_session, \
+from src.helpers import session_client, get_user_session, \
     get_user_id, get_username
 from src.keyboards import create_drop_responsibility_keyboard, \
     create_service_notice_keyboard, create_main_keyboard, \
@@ -22,31 +22,32 @@ from src.keyboards import create_drop_responsibility_keyboard, \
     create_bot_channels_keyboard, create_bot_order_options_keyboard, \
     create_back_button, create_on_off_buttons, create_ban_list_keyboard, create_service_channel_keyboard, \
     create_bot_locations_keyboard, create_locations_keyboard
+
 from src.models import create_tables, User, Courier, Order, OrderItem, \
     Product, ProductCount
 
-logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-DEBUG = os.environ.get('DEBUG')
+# logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
+#                     level=logging.INFO)
+# logger = logging.getLogger(__name__)
+#
+# cat = gettext.GNUTranslations(open('he.mo', 'rb'))
+# # DEBUG = os.environ.get('DEBUG')
+#
+# # if not DEBUG:
+# #     _ = cat.gettext
+#
+# # if DEBUG:
+# config = ConfigHelper(cfgfilename='test_conf.conf')
+# # else:
+# #     config = ConfigHelper()
 
 _ = gettext.gettext
-if not DEBUG:
-    _ = cat.gettext
-
-if DEBUG:
-    config = ConfigHelper(cfgfilename='test_conf.conf')
-else:
-    config = ConfigHelper()
-
-cart = CartHelper()
-
 
 #
 # bot helper functions
-# 
+#
+
 
 def is_vip_customer(bot, user_id):
     if not config.get_vip_customers():
@@ -154,7 +155,7 @@ def make_unconfirm(bot, update, user_data):
                          text='The admin did not confirm. Please retake '
                               'responsibility for order №{}'.format(order_id),
                          reply_markup=create_service_notice_keyboard(
-                             update, user_id, order_id), 
+                             update, user_id, order_id),
                          )
 
 #
@@ -427,8 +428,8 @@ def enter_state_shipping_time_text(bot, update, user_data):
 
 def enter_state_phone_number_text(bot, update, user_data):
     update.message.reply_text(text=_('Please send your phone number.'),
-                              reply_markup=create_cancel_keyboard(),
-                              parse_mode=ParseMode.MARKDOWN, )
+                              reply_markup=create_phone_number_request_keyboard(),
+                            )
     return BOT_STATE_CHECKOUT_PHONE_NUMBER_TEXT
 
 
@@ -531,6 +532,25 @@ def on_shipping_method(bot, update, user_data):
         return enter_state_shipping_method(bot, update, user_data)
 
 
+
+def on_bot_language_change(bot, update, user_data):
+    query = update.callback_query
+    data = query.data
+    # user_id = get_user_id(update)
+    # user_data = get_user_session(user_id)
+    global _
+    if data == 'lng_en':
+        _ = gettext.gettext
+    elif data == 'lng_he':
+        _ = cat.gettext
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=_('⚙ Bot settings'),
+                          reply_markup=create_bot_settings_keyboard(),
+                          parse_mode=ParseMode.MARKDOWN)
+    query.answer()
+    return ADMIN_BOT_SETTINGS
+    
 def on_shipping_pickup_location(bot, update, user_data):
     key = update.message.text
     user_id = get_user_id(update)
@@ -623,8 +643,8 @@ def on_shipping_time_text(bot, update, user_data):
         return enter_state_phone_number_text(bot, update, user_data)
 
 
-def on_phone_number_text(bot, update, user_data):
-    key = update.message.text
+def on_phone_number_text(bot, update):
+    key = update.message.text       # karoxa try-ov ylni kaxvats contact em tvel te back u cancel em arel
     user_id = get_user_id(update)
     user_data = get_user_session(user_id)
 
@@ -633,7 +653,7 @@ def on_phone_number_text(bot, update, user_data):
     elif key == BUTTON_TEXT_BACK:
         return enter_state_shipping_time(bot, update, user_data)
     else:
-        phone_number_text = update.message.text
+        phone_number_text = update.message.contact.phone_number
         user_data['shipping']['phone_number'] = phone_number_text
         session_client.json_set(user_id, user_data)
 
@@ -743,13 +763,9 @@ def on_confirm_order(bot, update, user_data):
         #                  )
 
         # ORDER CONFIRMED, send the details to service channel
+        txt = _('Order confirmed from (@{})\n\n').format(update.message.from_user.username)
         bot.send_message(config.get_service_channel(),
-                         text=_('Order confirmed from (@{})').format(
-                             update.message.from_user.username),
-                         parse_mode=ParseMode.MARKDOWN, )
-
-        bot.send_message(config.get_service_channel(),
-                         text=create_service_notice(
+                         text=txt + create_service_notice(
                              is_pickup, order_id, product_info, shipping_data,
                              total, delivery_min, delivery_cost),
                          parse_mode=ParseMode.HTML,
@@ -1080,6 +1096,7 @@ def on_statistics_menu(bot, update):
 def on_bot_settings_menu(bot, update):
     query = update.callback_query
     data = query.data
+    # user_id = get_user_id(update)
     if data == 'bot_settings_back':
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
@@ -1151,6 +1168,7 @@ def on_bot_settings_menu(bot, update):
                               parse_mode=ParseMode.MARKDOWN)
         query.answer()
         return ADMIN_BOT_ON_OFF
+    
     elif data == 'bot_settings_reset_all_data':
         set_config_session({})
         bot.edit_message_text(chat_id=query.message.chat_id,
@@ -1250,6 +1268,7 @@ def on_admin_couriers(bot, update):
 
         return ADMIN_TXT_COURIER_NAME
     elif data == 'bot_couriers_delete':
+
         bot.edit_message_text(chat_id=query.message.chat_id,
                               message_id=query.message.message_id,
                               text=_('Choose courier ID to delete'),
@@ -1411,8 +1430,9 @@ def main():
             BOT_STATE_CHECKOUT_PHONE_NUMBER_TEXT: [
                 CallbackQueryHandler(checkout_fallback_command_handler,
                                      pass_user_data=True),
-                MessageHandler(Filters.text, on_phone_number_text,
-                               pass_user_data=True),
+                # MessageHandler(Filters.text, on_phone_number_text,
+                #                pass_user_data=True),
+                MessageHandler(Filters.contact, on_phone_number_text),
             ],
             BOT_STATE_CHECKOUT_IDENTIFY_STAGE1: [
                 CallbackQueryHandler(checkout_fallback_command_handler,

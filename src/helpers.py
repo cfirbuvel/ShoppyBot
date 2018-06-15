@@ -2,7 +2,15 @@ import configparser
 import redis
 import json
 
-from .models import ProductCount, Product, Order, OrderItem, Courier
+from .models import ProductCount, Product, User, OrderItem, Courier
+
+
+# def set_locale(f):
+#     def wrapped(*args, **kwargs):
+#         self = kwargs['self']
+#         self.append('locale', self.locale)
+#         f(*args, **kwargs)
+#     return wrapped
 
 
 class JsonRedis(redis.StrictRedis):
@@ -13,6 +21,7 @@ class JsonRedis(redis.StrictRedis):
             value = json.loads(value.decode("utf-8"))
         return value
 
+    # @set_locale
     def json_set(self, name, value):
         value = json.dumps(value)
         return self.set(name, value)
@@ -340,7 +349,8 @@ def get_user_session(user_id):
     updated = False
 
     if not user_session:
-        session_client.json_set(user_id, {})
+        user = User.get(telegram_id=user_id)
+        session_client.json_set(user_id, {'locale': user.locale})
         user_session = session_client.json_get(user_id)
 
     if not user_session.get('cart'):

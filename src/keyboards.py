@@ -3,14 +3,7 @@ import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, \
     KeyboardButton, ReplyKeyboardMarkup
 from .enums import *
-from .helpers import get_username, get_user_id
-
-DEBUG = os.environ.get('DEBUG')
-cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-
-_ = gettext.gettext
-if not DEBUG:
-    _ = cat.gettext
+from .enums import _
 
 
 def create_time_keyboard():
@@ -38,6 +31,19 @@ def create_confirmation_keyboard():
         ]
     ]
     return ReplyKeyboardMarkup(button_row, resize_keyboard=True)
+
+
+def create_phone_number_request_keyboard():
+    buttons = [
+        [KeyboardButton(
+            text=_('Allow to send my phone number'),
+            request_contact=True
+        )],
+        [KeyboardButton(BUTTON_TEXT_BACK)],
+        [KeyboardButton(BUTTON_TEXT_CANCEL)],
+    ]
+
+    return ReplyKeyboardMarkup(buttons, one_time_keyboard=True)
 
 
 def create_cancel_keyboard():
@@ -147,6 +153,19 @@ def create_main_keyboard(review_channel, is_admin=None, total_price=0):
     return InlineKeyboardMarkup(main_button_list)
 
 
+<<<<<<< HEAD
+def create_bot_language_keyboard():
+    keyboard = [
+        [InlineKeyboardButton(
+            _("Hebrew"), callback_data='lng_he')],
+        [InlineKeyboardButton(
+            _("English"), callback_data='lng_en')]
+    ]
+    return InlineKeyboardMarkup(keyboard, resize_keyboard=True)
+
+
+=======
+>>>>>>> f6538122448b694bf81e63a4b0db0fc00c966ff9
 def create_product_keyboard(product_id, user_data, cart):
     button_row = []
 

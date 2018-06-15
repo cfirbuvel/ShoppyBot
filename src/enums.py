@@ -1,12 +1,18 @@
 import gettext
-import os
+import logging
+import sys
 
-DEBUG = os.environ.get('DEBUG')
+from src.helpers import ConfigHelper, CartHelper
+
 cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-
 _ = gettext.gettext
-if not DEBUG:
-    _ = cat.gettext
+
+logging.basicConfig(stream=sys.stderr, format='%(asctime)s %(message)s',
+                    level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+cart = CartHelper()
+config = ConfigHelper(cfgfilename='test_conf.conf')
 
 (BOT_STATE_INIT,
  BOT_STATE_CHECKOUT_SHIPPING,
@@ -57,6 +63,7 @@ if not DEBUG:
  ADMIN_BAN_LIST_REMOVE,
  ADMIN_BAN_LIST_ADD,
  ADMIN_SET_WELCOME_MESSAGE) = range(48)
+
 
 BUTTON_TEXT_PICKUP      = _('🏪 Pickup')
 BUTTON_TEXT_DELIVERY    = _('🚚 Delivery')

@@ -1,12 +1,4 @@
-import gettext
-import os
-
-DEBUG = os.environ.get('DEBUG')
-cat = gettext.GNUTranslations(open('he.mo', 'rb'))
-
-_ = gettext.gettext
-if not DEBUG:
-    _ = cat.gettext
+from src.enums import _
 
 
 def create_product_description(product_title, product_prices, product_count,
@@ -18,7 +10,7 @@ def create_product_description(product_title, product_prices, product_count,
     if delivery_fee > 0:
         text += _('<b>Delivery Fee: {}$</b>').format(delivery_fee)
         text += '\n'
-        text += _('for orders blow below {}$').format(delivery_min)
+        text += _('for orders below {}$').format(delivery_min)
         text += '\n'
         text += '〰️'
     text += '\n'

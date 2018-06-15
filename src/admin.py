@@ -1,6 +1,5 @@
 import io
-import logging
-import sys
+import os
 
 from telegram import ParseMode, Message, CallbackQuery
 from telegram import ReplyKeyboardRemove
@@ -8,6 +7,7 @@ from telegram.error import TelegramError
 from telegram.ext import ConversationHandler
 
 from .enums import *
+from .enums import _
 from .helpers import ConfigHelper, session_client, get_config_session, \
     get_user_session, get_user_id, set_config_session
 from .models import Product, ProductCount, Courier, Location, CourierLocation
@@ -469,7 +469,7 @@ def on_admin_btn_courier_location(bot, update, user_data):
             # clear new courier data
             del user_data['add_courier']
             bot.send_message(chat_id=query.message.chat_id,
-                             text='Courier added',
+                             text=_('Courier added'),
                              reply_markup=create_bot_couriers_keyboard(),
                              parse_mode=ParseMode.MARKDOWN)
             return ADMIN_COURIERS
@@ -529,7 +529,7 @@ def on_admin_txt_delete_courier(bot, update, user_data):
 
     courier.delete_instance()
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Courier deleted',
+                     text=_('Courier deleted'),
                      reply_markup=create_bot_couriers_keyboard(),
                      parse_mode=ParseMode.MARKDOWN)
     return ADMIN_COURIERS
